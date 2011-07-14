@@ -28,4 +28,18 @@ public class ConfigVar {
         return baseDocImageLocation;
     }
     
+    
+    public static String baseDocLocation(String folderId, String docId, String docVersionId){
+        String baseDocImageLocation = DmConfigServiceUtil.getValue(ConfigConstants.BASE_DOC_LOCATION);
+        
+        baseDocImageLocation = baseDocImageLocation.replaceAll("%year%", StringUtils.leftPad(""+Calendar.getInstance().get(Calendar.YEAR), 2, "0"));
+        baseDocImageLocation = baseDocImageLocation.replaceAll("%month%", StringUtils.leftPad(""+Calendar.getInstance().get(Calendar.MONTH+1), 2, "0"));
+        baseDocImageLocation = baseDocImageLocation.replaceAll("%date%", StringUtils.leftPad(""+Calendar.getInstance().get(Calendar.DAY_OF_MONTH), 2, "0"));
+        baseDocImageLocation = baseDocImageLocation.replaceAll("%folder_id%", folderId);
+        baseDocImageLocation = baseDocImageLocation.replaceAll("%doc_id%", docId);
+        baseDocImageLocation = baseDocImageLocation.replaceAll("%version_id%", docVersionId);
+        
+        return baseDocImageLocation;
+    }
+    
 }

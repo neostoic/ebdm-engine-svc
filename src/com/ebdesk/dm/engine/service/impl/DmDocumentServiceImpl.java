@@ -49,7 +49,6 @@ import com.ebdesk.dm.engine.exception.InsufficientPriviledgeException;
 import com.ebdesk.dm.engine.exception.UserAccountNotFoundException;
 import com.ebdesk.dm.engine.service.DmConfigServiceUtil;
 import com.ebdesk.dm.engine.service.DmDocumentService;
-import com.ebdesk.dm.engine.util.DocumentVersionUtil;
 import com.ebdesk.dm.engine.util.compare.LineDifference;
 import com.ebdesk.dm.engine.util.compare.TextCompare;
 import java.io.File;
