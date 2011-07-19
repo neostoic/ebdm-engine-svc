@@ -31,11 +31,14 @@ public class DmDocumentApproval {
      *  3: REJECTED
      *  4: CONFIRMED
      */
-    @Column(name = "dda_approval_statuss")
+    @Column(name = "dda_approval_status")
     private Integer status;
     
     @Column(name = "dda_comment", nullable = true, length = 4000)
     private String comment;
+
+    @Column(name = "dda_is_doc_version", nullable = true)
+    private Boolean isDocVersion;
     
     @JoinColumn(name = "dda_approved_by", referencedColumnName = "da_id", nullable = true)
     @ManyToOne(targetEntity = DmAccount.class)
@@ -103,4 +106,13 @@ public class DmDocumentApproval {
     public void setStatus(Integer status) {
         this.status = status;
     }
+
+    public Boolean getIsDocVersion() {
+        return isDocVersion;
+    }
+
+    public void setId(Boolean isDocVersion) {
+        this.isDocVersion = isDocVersion;
+    }
+
 }
