@@ -45,6 +45,9 @@ public class DmDocument implements Serializable {
     private String mimeType;
     @Column(name = "dd_is_removed")
     private Boolean isRemoved;
+    
+    @Column(name = "dd_is_approved")
+    private Boolean approved;
 
     @JoinColumn(name = "ddv_id_last_version", referencedColumnName = "ddv_id", nullable = true)
     @ManyToOne(targetEntity = DmDocumentVersion.class)
@@ -113,6 +116,14 @@ public class DmDocument implements Serializable {
         this.isRemoved = isRemoved;
     }
 
+    public Boolean getApproved() {
+        return approved;
+    }
+
+    public void setApproved(Boolean approved) {
+        this.approved = approved;
+    }    
+    
     public Date getLastModifiedTime() {
         return lastModifiedTime;
     }

@@ -137,6 +137,8 @@ public interface DmDocumentService {
     
     public void unlockDocument(String accountId, String folderId, String documentId);
     
+    public void moveDocument(String accountId, String folderIdSource, String [] documentsId, String folderIdDest);
+    
     public void deleteVersion(String accountId, String folderId, String versionId);
        
     /***

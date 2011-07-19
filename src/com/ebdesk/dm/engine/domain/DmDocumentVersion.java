@@ -62,6 +62,9 @@ public class DmDocumentVersion implements Serializable {
     
     @Column(name = "ddv_is_rendered")
     private Boolean isRendered;
+    
+    @Column(name = "dd_is_approved")
+    private Boolean approved;
 
     @JoinColumn(name = "dd_id", referencedColumnName = "dd_id", nullable = true)
     @ManyToOne(targetEntity = DmDocument.class)
@@ -209,6 +212,13 @@ public class DmDocumentVersion implements Serializable {
     public void setIsRendered(Boolean isRendered) {
         this.isRendered = isRendered;
     }
-    
+
+    public Boolean getApproved() {
+        return approved;
+    }
+
+    public void setApproved(Boolean approved) {
+        this.approved = approved;
+    }
     
 }

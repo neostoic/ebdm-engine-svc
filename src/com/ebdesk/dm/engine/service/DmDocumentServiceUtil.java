@@ -157,6 +157,10 @@ public class DmDocumentServiceUtil {
     public static void unlockDocument(String accountId, String folderId, String documentId) {
         getDocumentService().unlockDocument(accountId, folderId, documentId);
     }
+    
+    public static void moveDocument(String accountId, String folderIdSource, String [] documentsId, String folderIdDest){
+        
+    }
 
     public static void deleteVersion(String accountId, String folderId, String versionId){
         getDocumentService().deleteVersion(accountId, folderId, versionId);
