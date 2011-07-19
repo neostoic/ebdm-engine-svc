@@ -27,9 +27,9 @@ public interface DmExtractService {
     @Deprecated
     public void extractDocument();
     
-    
+    @Deprecated
     public void fillAnnotation();
     
-    
+    @Deprecated
     public void fillComment();
 }

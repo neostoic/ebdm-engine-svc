@@ -44,6 +44,10 @@ public class DmDocumentVersion implements Serializable {
     private Date modifiedTime;
     @Column(name = "ddv_pdf_path")
     private String pdfPath;
+    
+    @Column(name = "ddv_text_path")
+    private String textPath;
+    
     @Lob
     @Column(name = "ddv_text_content")
     private String textContent;
@@ -58,7 +62,7 @@ public class DmDocumentVersion implements Serializable {
     
     @Column(name = "ddv_is_rendered")
     private Boolean isRendered;
-    
+
     @JoinColumn(name = "dd_id", referencedColumnName = "dd_id", nullable = true)
     @ManyToOne(targetEntity = DmDocument.class)
     private DmDocument document;
@@ -150,10 +154,26 @@ public class DmDocumentVersion implements Serializable {
         this.pdfPath = pdfPath;
     }
 
+    public String getTextPath() {
+        return textPath;
+    }
+
+    public void setTextPath(String textPath) {
+        this.textPath = textPath;
+    }
+    
+    /***
+     * @deprecated better use getTextPath() and then read the file
+     */
+    @Deprecated
     public String getTextContent() {
         return textContent;
     }
 
+    /***
+     * @deprecated better use setTextPath(String textPath) to save the text content of file.
+     */
+    @Deprecated
     public void setTextContent(String textContent) {
         this.textContent = textContent;
     }

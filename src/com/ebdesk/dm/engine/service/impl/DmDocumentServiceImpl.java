@@ -51,6 +51,7 @@ import com.ebdesk.dm.engine.service.DmConfigServiceUtil;
 import com.ebdesk.dm.engine.service.DmDocumentService;
 import com.ebdesk.dm.engine.util.compare.LineDifference;
 import com.ebdesk.dm.engine.util.compare.TextCompare;
+import com.ebdesk.dm.engine.util.config.ConfigVar;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -60,6 +61,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -331,24 +333,24 @@ public class DmDocumentServiceImpl implements DmDocumentService {
 
     public void deleteComment(String accountId, String folderId, String documentId, String commentId) {
         boolean isWriter = isWriter(accountId, folderId);
-        
+
         if (commentId == null) {
             throw new IllegalArgumentException("Commment is required.");
         }
-        
+
         DmDocumentComment comment = documentCommentDao.findById(commentId);
-        
+
         if (comment == null) {
             throw new IllegalArgumentException("Commment doesn't exist.");
         }
-        
+
         boolean canDelete = false;
         if (isWriter) {
             canDelete = true;
         } else if (accountId.equals(comment.getCommentedBy().getId())) {
             canDelete = true;
         }
-        
+
         if (canDelete) {
             documentCommentDao.delete(comment);
         }
@@ -458,8 +460,8 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         String documentId = UUID.randomUUID().toString();
         String versionId = UUID.randomUUID().toString();
         String fileName = versionId + "_" + fileItem.getName();
-        String baseDocFolder = DmConfigServiceUtil.getValue(ConfigConstants.BASE_DOC_LOCATION);
-        String folderLocation = baseDocFolder + FileUtils.FILE_SEPARATOR + folder.getId() + FileUtils.FILE_SEPARATOR + documentId;
+        String folderLocation = ConfigVar.baseDocLocation(folderId, documentId, versionId);
+        //String folderLocation = baseDocFolder + FileUtils.FILE_SEPARATOR + folder.getId() + FileUtils.FILE_SEPARATOR + documentId;
         log.debug("FILE LOCATION : " + folderLocation + FileUtils.FILE_SEPARATOR + fileName);
         log.debug("FILE CONTENT TYPE : " + fileItem.getContentType());
         FileUtils.createFolderPath(folderLocation);
@@ -507,23 +509,32 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         documentVersion.setFileName(fileItem.getName());
         documentVersion.setFilePath(file.getAbsolutePath());
 
+        PDFContent pdfContent = null;
+
         if (!FileUtils.PDF_EXTENSION.equals(fileExtension)) {
             String pdfFile = FileUtils.generatePdfName(file.getAbsolutePath());
             boolean isConvert = FileUtils.convertToPdf(file.getAbsolutePath(), pdfFile);
-            PDFContent pdfContent = FileUtils.extractPdf(pdfFile);
+            pdfContent = FileUtils.extractPdf(pdfFile);
             String contentText = pdfContent.getTextContent();
             if (isConvert && contentText != null) {
                 documentVersion.setPdfPath(pdfFile);
-                documentVersion.setTextContent(contentText);
+                //documentVersion.setTextContent(contentText);
                 documentVersion.setNumberOfPages(pdfContent.getNumberOfPages());
             }
         } else {
-            PDFContent pdfContent = FileUtils.extractPdf(file.getAbsolutePath());
+            pdfContent = FileUtils.extractPdf(file.getAbsolutePath());
             String contentText = pdfContent.getTextContent();
             documentVersion.setPdfPath(file.getAbsolutePath());
             if (contentText != null) {
-                documentVersion.setTextContent(contentText);
+                //documentVersion.setTextContent(contentText);
                 documentVersion.setNumberOfPages(pdfContent.getNumberOfPages());
+            }
+        }
+
+        if (documentVersion.getTextPath() == null && pdfContent != null) {
+            String textFile = FileUtils.generateTextName(file.getAbsolutePath());
+            if (FileUtils.writeFile(textFile, pdfContent.getTextContent())) {
+                documentVersion.setTextPath(textFile);
             }
         }
 
@@ -636,8 +647,8 @@ public class DmDocumentServiceImpl implements DmDocumentService {
 
         String versionId = UUID.randomUUID().toString();
         String fileName = versionId + "_" + fileItem.getName();
-        String baseDocFolder = DmConfigServiceUtil.getValue(ConfigConstants.BASE_DOC_LOCATION);
-        String folderLocation = baseDocFolder + FileUtils.FILE_SEPARATOR + folder.getId() + FileUtils.FILE_SEPARATOR + documentId;
+        String folderLocation = ConfigVar.baseDocLocation(folderId, documentId, versionId);
+        //String folderLocation = baseDocFolder + FileUtils.FILE_SEPARATOR + folder.getId() + FileUtils.FILE_SEPARATOR + documentId;
         log.debug("FILE LOCATION : " + folderLocation + FileUtils.FILE_SEPARATOR + fileName);
         log.debug("FILE CONTENT TYPE : " + fileItem.getContentType());
         FileUtils.createFolderPath(folderLocation);
@@ -684,24 +695,32 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         documentVersion.setFileName(fileItem.getName());
         documentVersion.setFilePath(file.getAbsolutePath());
 
+        PDFContent pdfContent = null;
 
         if (!FileUtils.PDF_EXTENSION.equals(FileUtils.getFileExtension(file.getAbsolutePath()))) {
             String pdfFile = FileUtils.generatePdfName(file.getAbsolutePath());
             boolean isConvert = FileUtils.convertToPdf(file.getAbsolutePath(), pdfFile);
-            PDFContent pdfContent = FileUtils.extractPdf(pdfFile);
+            pdfContent = FileUtils.extractPdf(pdfFile);
             String contentText = pdfContent.getTextContent();
             if (isConvert && contentText != null) {
                 documentVersion.setPdfPath(pdfFile);
-                documentVersion.setTextContent(contentText);
+                //documentVersion.setTextContent(contentText);
                 documentVersion.setNumberOfPages(pdfContent.getNumberOfPages());
             }
         } else {
-            PDFContent pdfContent = FileUtils.extractPdf(file.getAbsolutePath());
+            pdfContent = FileUtils.extractPdf(file.getAbsolutePath());
             String contentText = pdfContent.getTextContent();
             documentVersion.setPdfPath(file.getAbsolutePath());
             if (contentText != null) {
-                documentVersion.setTextContent(contentText);
+                //documentVersion.setTextContent(contentText);
                 documentVersion.setNumberOfPages(pdfContent.getNumberOfPages());
+            }
+        }
+
+        if (documentVersion.getTextPath() == null && pdfContent != null) {
+            String textFile = FileUtils.generateTextName(file.getAbsolutePath());
+            if (FileUtils.writeFile(textFile, pdfContent.getTextContent())) {
+                documentVersion.setTextPath(textFile);
             }
         }
 
@@ -1054,8 +1073,9 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         if (version == null) {
             throw new IllegalArgumentException("Document version can't be null");
         }
-
-        if (version.getTextContent() == null) {
+        
+        if (version.getTextPath() == null) {
+            String textFile = FileUtils.generateTextName(version.getFilePath());
             if (version.getPdfPath() == null) {
                 String pdfFile = FileUtils.generatePdfName(version.getFilePath());
                 boolean converted = false;
@@ -1073,7 +1093,11 @@ public class DmDocumentServiceImpl implements DmDocumentService {
                 String stringPdfContent = pdfContent.getTextContent();
                 if (converted && stringPdfContent != null) {
                     version.setPdfPath(pdfFile);
-                    version.setTextContent(stringPdfContent);
+                    //version.setTextContent(stringPdfContent);
+                    if (FileUtils.writeFile(textFile, pdfContent.getTextContent())) {
+                        version.setTextPath(textFile);
+                    }
+                    
                     version.setNumberOfPages(pdfContent.getNumberOfPages());
                     documentVersionDao.update(version);
                     textContent = stringPdfContent;
@@ -1082,14 +1106,22 @@ public class DmDocumentServiceImpl implements DmDocumentService {
                 PDFContent content = FileUtils.extractPdf(version.getPdfPath());
                 String pdfContent = content.getTextContent();
                 if (pdfContent != null) {
-                    version.setTextContent(pdfContent);
-                    version.setNumberOfPages(version.getNumberOfPages());
+                    //version.setTextContent(pdfContent);
+                    if (FileUtils.writeFile(textFile, pdfContent)) {
+                        version.setTextPath(textFile);
+                    }
+                    
+                    version.setNumberOfPages(version.getNumberOfPages());                    
                     documentVersionDao.update(version);
                 }
                 textContent = pdfContent;
             }
         } else {
-            textContent = version.getTextContent();
+            try {
+                textContent = FileUtils.getContents(new File(version.getTextPath()));
+            } catch (Exception ex) {
+                textContent = "Sorry, system couldn't read file";
+            }
         }
         return textContent;
     }

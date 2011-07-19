@@ -70,6 +70,7 @@ public class DmExtractServiceImpl implements DmExtractService {
             return null;
         } else if (documentVersion.getPdfPath() == null || "".equals(documentVersion.getPdfPath())) {
             File file = new File(documentVersion.getFilePath());
+            String textFile = FileUtils.generateTextName(documentVersion.getFilePath());
             if (!FileUtils.PDF_EXTENSION.equals(FileUtils.getFileExtension(file.getAbsolutePath()))) {
                 String pdfFile = FileUtils.generatePdfName(file.getAbsolutePath());
                 boolean isConvert = FileUtils.convertToPdf(file.getAbsolutePath(), pdfFile);
@@ -77,7 +78,10 @@ public class DmExtractServiceImpl implements DmExtractService {
                 String contentText = pdfContent.getTextContent();
                 if (isConvert && contentText != null) {
                     documentVersion.setPdfPath(pdfFile);
-                    documentVersion.setTextContent(contentText);
+                    //documentVersion.setTextContent(contentText);
+                    if (FileUtils.writeFile(textFile, pdfContent.getTextContent())) {
+                        documentVersion.setTextPath(textFile);
+                    }
                     documentVersion.setNumberOfPages(pdfContent.getNumberOfPages());
                 }
             } else {
@@ -85,7 +89,10 @@ public class DmExtractServiceImpl implements DmExtractService {
                 String contentText = pdfContent.getTextContent();
                 documentVersion.setPdfPath(file.getAbsolutePath());
                 if (contentText != null) {
-                    documentVersion.setTextContent(contentText);
+                    //documentVersion.setTextContent(contentText);
+                    if (FileUtils.writeFile(textFile, pdfContent.getTextContent())) {
+                        documentVersion.setTextPath(textFile);
+                    }
                     documentVersion.setNumberOfPages(pdfContent.getNumberOfPages());
                 }
             }
@@ -137,6 +144,7 @@ public class DmExtractServiceImpl implements DmExtractService {
             return;
         } else if (documentVersion.getPdfPath() == null || "".equals(documentVersion.getPdfPath())) {
             File file = new File(documentVersion.getFilePath());
+            String textFile = FileUtils.generateTextName(documentVersion.getFilePath());
             if (!FileUtils.PDF_EXTENSION.equals(FileUtils.getFileExtension(file.getAbsolutePath()))) {
                 String pdfFile = FileUtils.generatePdfName(file.getAbsolutePath());
                 boolean isConvert = FileUtils.convertToPdf(file.getAbsolutePath(), pdfFile);
@@ -144,7 +152,10 @@ public class DmExtractServiceImpl implements DmExtractService {
                 String contentText = pdfContent.getTextContent();
                 if (isConvert && contentText != null) {
                     documentVersion.setPdfPath(pdfFile);
-                    documentVersion.setTextContent(contentText);
+                    //documentVersion.setTextContent(contentText);
+                    if (FileUtils.writeFile(textFile, pdfContent.getTextContent())) {
+                        documentVersion.setTextPath(textFile);
+                    }
                     documentVersion.setNumberOfPages(pdfContent.getNumberOfPages());
                 }
             } else {
@@ -152,14 +163,18 @@ public class DmExtractServiceImpl implements DmExtractService {
                 String contentText = pdfContent.getTextContent();
                 documentVersion.setPdfPath(file.getAbsolutePath());
                 if (contentText != null) {
-                    documentVersion.setTextContent(contentText);
+                    //documentVersion.setTextContent(contentText);
+                    if (FileUtils.writeFile(textFile, pdfContent.getTextContent())) {
+                        documentVersion.setTextPath(textFile);
+                    }
                     documentVersion.setNumberOfPages(pdfContent.getNumberOfPages());
                 }
             }
-
             documentVersionDao.update(documentVersion);
         }
 
+        
+        
         docRenderImageDao.deleteDocRenderByVersionId(documentVersion.getId());
         String folderLocation = ConfigVar.baseDocImageLocation(null, null, documentVersion.getId());
         FileUtils.createFolderPath(folderLocation);

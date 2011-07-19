@@ -10,11 +10,17 @@ import com.artofsolving.jodconverter.openoffice.connection.SocketOpenOfficeConne
 import com.artofsolving.jodconverter.openoffice.converter.OpenOfficeDocumentConverter;
 import com.ebdesk.dm.engine.domain.util.PDFContent;
 import com.ebdesk.dm.engine.util.parser.PDFTextParser;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.net.FileNameMap;
 import java.net.URLConnection;
 import java.util.logging.Level;
@@ -28,7 +34,6 @@ import org.apache.commons.lang.StringUtils;
 public class FileUtils {
 
     public static String FILE_SEPARATOR = "/";
-    
     public static String PDF_EXTENSION = ".pdf";
 
     /***
@@ -57,19 +62,20 @@ public class FileUtils {
         extension = fileName.substring(dotPos);
         return extension;
     }
-    
-    public static String generatePdfName(String fileName){
+
+    public static String generatePdfName(String fileName) {
         String extension = getFileExtension(fileName);
         String pdfName = StringUtils.replace(fileName, extension, ".pdf");
         return pdfName;
     }
-    
-//    @Deprecated
-//    public static String generateTextFromPdf(String fileName){
-//        return PDFTextParser.extractPDF(fileName).getTextContent();
-//    }
-    
-    public static PDFContent extractPdf(String fileName){
+
+    public static String generateTextName(String fileName) {
+        String extension = getFileExtension(fileName);
+        String pdfName = StringUtils.replace(fileName, extension, ".text");
+        return pdfName;
+    }
+
+    public static PDFContent extractPdf(String fileName) {
         return PDFTextParser.extractPDF(fileName);
     }
 
@@ -158,5 +164,84 @@ public class FileUtils {
             ex.printStackTrace(System.out);
             return false;
         }
+    }
+
+    /***
+     * 
+     * @param path
+     * @param content
+     * @return 
+     */
+    public static boolean writeFile(String path, String content) {
+        Writer output = null;
+        File file = new File(path);
+        boolean success = false;
+        try {      
+            output = new BufferedWriter(new FileWriter(file));
+            output.write(content);
+            return true;
+        } catch (IOException ex) {
+            Logger.getLogger(FileUtils.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                if (output != null) {
+                    output.close();
+                }                
+            } catch (IOException ex) {
+                Logger.getLogger(FileUtils.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        return success;
+    }
+    
+    /***
+     * 
+     * @param path
+     * @param content
+     * @return 
+     */
+    public static boolean writeFile(String path, byte[] content) {
+        FileOutputStream fileOutputStream = null;
+        File file = new File(path);
+        boolean success = false;
+        try {     
+            fileOutputStream = new FileOutputStream(file);
+            fileOutputStream.write(content);
+            return true;
+        } catch (IOException ex) {
+            Logger.getLogger(FileUtils.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                if(fileOutputStream != null)
+                    fileOutputStream.close();
+            } catch (IOException ex) {
+                Logger.getLogger(FileUtils.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        return success;
+    }
+    
+    
+    public static String getContents(File aFile) throws IOException {
+        StringBuilder contents = new StringBuilder();
+
+        try {
+            BufferedReader input = new BufferedReader(new FileReader(aFile));
+            try {
+                String line = null; 
+                while ((line = input.readLine()) != null) {
+                    contents.append(line);
+                    contents.append(System.getProperty("line.separator"));
+                }
+            } finally {
+                input.close();
+            }
+        } catch (IOException ex) {
+            return "";
+        }
+
+        return contents.toString();
     }
 }
