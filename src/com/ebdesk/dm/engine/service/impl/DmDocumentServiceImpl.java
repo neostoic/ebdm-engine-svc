@@ -4,7 +4,6 @@
  */
 package com.ebdesk.dm.engine.service.impl;
 
-import com.ebdesk.dm.engine.constant.ConfigConstants;
 import com.ebdesk.dm.engine.constant.DatabaseConstants;
 import com.ebdesk.dm.engine.constant.MessageCodeConstants;
 import com.ebdesk.dm.engine.dao.DmAccountDao;
@@ -42,12 +41,12 @@ import com.ebdesk.dm.engine.util.FileUtils;
 import com.ebdesk.dm.engine.domain.util.FolderPermission;
 import com.ebdesk.dm.engine.domain.util.PDFContent;
 import com.ebdesk.dm.engine.dto.DocumentCompare;
+import com.ebdesk.dm.engine.dto.DocumentVersionDownload;
 import com.ebdesk.dm.engine.dto.DocumentView;
 import com.ebdesk.dm.engine.exception.DocumentNotFoundException;
 import com.ebdesk.dm.engine.exception.FolderNotFoundException;
 import com.ebdesk.dm.engine.exception.InsufficientPriviledgeException;
 import com.ebdesk.dm.engine.exception.UserAccountNotFoundException;
-import com.ebdesk.dm.engine.service.DmConfigServiceUtil;
 import com.ebdesk.dm.engine.service.DmDocumentService;
 import com.ebdesk.dm.engine.util.compare.LineDifference;
 import com.ebdesk.dm.engine.util.compare.TextCompare;
@@ -61,7 +60,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1290,4 +1288,122 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         }
         return false;
     }
+
+    public boolean moveDocument(String documentId, String folderIdDest) {
+        DmDocumentFolder docFolder = documentFolderDao.getByDocument(documentId);
+        if (docFolder != null) {
+            DmFolder folder = folderDao.findById(folderIdDest);
+            if (folder != null) {
+                docFolder.setFolder(folder);
+                documentFolderDao.update(docFolder);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public DocumentVersionDownload downloadDocumentVersion(String documentId, String versionId, String folderId, String accountId) {
+        DocumentVersionDownload download = null;
+        DmAccount account = accountDao.get(accountId);
+        DmFolder folder = folderDao.findById(folderId);
+
+        if (folder == null) {
+            throw new IllegalArgumentException(MessageCodeConstants.EBDM_ERROR_FOLDER_GENERAL_NO_FOLDER + " : " + "Folder not found.");
+        }
+
+        if (account == null) {
+            throw new IllegalArgumentException(MessageCodeConstants.EBDM_ERROR_ACCOUNT_GENERAL_NO_ACCOUNT + " : " + "Account not found.");
+        }
+
+        boolean isCanDownload = isCanDownload(accountId, folderId);
+        if (!isCanDownload) {
+            throw new InsufficientPriviledgeException(MessageCodeConstants.EBDM_ERROR_DOC_GENERAL_CANNOT_DOWNLOAD + " : "
+                    + "Account " + account.getName() + " cannot download any documents in folder " + folder.getName());
+        }
+
+        DmDocument document = this.findDocumentByDocId(documentId);
+        DmDocumentVersion documentVersion = documentVersionDao.findById(versionId);
+        if (document != null) {
+            download = new DocumentVersionDownload();
+            download.setDocument(document);
+            download.setDocumentVersion(documentVersion);
+            byte[] fileBytes = FileUtils.getBytesFromFile(download.getDocumentVersion().getFilePath());
+            download.setData(fileBytes);
+        } else {
+            throw new IllegalArgumentException(MessageCodeConstants.EBDM_ERROR_DOC_GENERAL_NOT_FOUND + " : " + "Document not found.");
+        }
+
+        DmDocAccessHistory accessHistory = new DmDocAccessHistory();
+        accessHistory.setId(UUID.randomUUID().toString());
+        accessHistory.setAccessedBy(account);
+        accessHistory.setAccessedTime(new Date());
+        accessHistory.setDocVersion(document.getLastVersion());
+        accessHistory.setAccessType(DocumentAccessHistory.DOWNLOAD.getAccessType());
+        docAccessHistoryDao.save(accessHistory);
+        return download;
+    }
+
+    public DocumentVersionDownload viewDocumentVersion(String documentId, String versionId, String folderId, String accountId) {
+        DocumentVersionDownload download = null;
+        DmAccount account = accountDao.get(accountId);
+        DmFolder folder = folderDao.findById(folderId);
+
+        if (folder == null) {
+            throw new IllegalArgumentException(MessageCodeConstants.EBDM_ERROR_FOLDER_GENERAL_NO_FOLDER + " : " + "Folder not found.");
+        }
+
+        if (account == null) {
+            throw new IllegalArgumentException(MessageCodeConstants.EBDM_ERROR_ACCOUNT_GENERAL_NO_ACCOUNT + " : " + "Account not found.");
+        }
+
+        boolean isCanView = isCanView(accountId, folderId);
+        if (!isCanView) {
+            throw new InsufficientPriviledgeException(MessageCodeConstants.EBDM_ERROR_DOC_GENERAL_CANNOT_DOWNLOAD + " : "
+                    + "Account " + account.getName() + " cannot download any documents in folder " + folder.getName());
+        }
+
+        DmDocument document = this.findDocumentByDocId(documentId);
+        DmDocumentVersion documentVersion = documentVersionDao.findById(versionId);
+        if (document != null) {
+            download = new DocumentVersionDownload();
+            download.setDocument(document);
+            download.setDocumentVersion(documentVersion);
+//            DmDocumentVersion version = document.getLastVersion();
+            DmDocumentVersion version = documentVersion;
+//            if (download.getDocument().getLastVersion().getPdfPath() == null) {
+            if (download.getDocumentVersion().getPdfPath() == null) {
+                String pdfFile = FileUtils.generatePdfName(version.getFilePath());
+                if (FileUtils.PDF_EXTENSION.equals(FileUtils.getFileExtension(version.getFilePath()))) {
+                    pdfFile = version.getFilePath();
+                    version.setPdfPath(pdfFile);
+                    documentVersionDao.update(version);
+                }else {
+                    boolean converted = false;
+                    try{
+                        converted = FileUtils.convertToPdf(version.getFilePath(), pdfFile);
+                    }catch(Exception ex){
+                        throw new IllegalArgumentException("Document can't be extracted...");
+                    }
+                    if (converted) {
+                        version.setPdfPath(pdfFile);
+                        documentVersionDao.update(version);
+                    }
+                }
+            }
+            byte[] fileBytes = FileUtils.getBytesFromFile(version.getPdfPath());
+            download.setData(fileBytes);
+        } else {
+            throw new IllegalArgumentException(MessageCodeConstants.EBDM_ERROR_DOC_GENERAL_NOT_FOUND + " : " + "Document not found.");
+        }
+
+        DmDocAccessHistory accessHistory = new DmDocAccessHistory();
+        accessHistory.setId(UUID.randomUUID().toString());
+        accessHistory.setAccessedBy(account);
+        accessHistory.setAccessedTime(new Date());
+        accessHistory.setDocVersion(document.getLastVersion());
+        accessHistory.setAccessType(DocumentAccessHistory.DOCUMENT_VIEW.getAccessType());
+        docAccessHistoryDao.save(accessHistory);
+        return download;
+    }
+
 }

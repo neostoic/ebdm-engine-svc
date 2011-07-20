@@ -83,4 +83,15 @@ public class DmDocumentFolderDao extends BaseDmEngineDaoImpl<DmDocumentFolder> {
         }
         return rowCount;
     }
+
+    public DmDocumentFolder getByDocument(String documentId) {
+        Criteria crit = getSession().createCriteria(DmDocumentFolder.class, "df");
+        crit.add(Restrictions.eq("df.document.id", documentId));
+        List result = crit.list();
+
+        if (result.size() > 0) {
+            return (DmDocumentFolder) result.get(0);
+        }
+        return null;
+    }
 }

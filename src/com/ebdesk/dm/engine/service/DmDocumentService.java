@@ -13,6 +13,7 @@ import com.ebdesk.dm.engine.domain.DmDocumentComment;
 import com.ebdesk.dm.engine.domain.DmDocumentVersion;
 import com.ebdesk.dm.engine.dto.DocumentCompare;
 import com.ebdesk.dm.engine.dto.DocumentDownload;
+import com.ebdesk.dm.engine.dto.DocumentVersionDownload;
 import com.ebdesk.dm.engine.dto.DocumentView;
 import java.util.List;
 import org.apache.commons.fileupload.FileItem;
@@ -170,7 +171,11 @@ public interface DmDocumentService {
     public DocumentDownload downloadDocument(String documentId, String folderId, String accountId);
     
     public DocumentDownload viewDocument(String documentId, String folderId, String accountId);
-    
+
+    public DocumentVersionDownload downloadDocumentVersion(String documentId, String versionId, String folderId, String accountId);
+
+    public DocumentVersionDownload viewDocumentVersion(String documentId, String versionId, String folderId, String accountId);
+ 
     public DocumentView viewDocumentPage(String documentId, String folderId, String accountId);
     
     public DocumentCompare compareDocumentVersion(String firstVersionId, String secondVersionId);
@@ -201,4 +206,5 @@ public interface DmDocumentService {
     
     public boolean isCanDownload(String accountId, String folderId);
 
+    public boolean moveDocument(String documentId, String folderIdDest);
 }
