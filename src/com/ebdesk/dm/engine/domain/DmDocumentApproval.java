@@ -111,7 +111,7 @@ public class DmDocumentApproval {
         return isDocVersion;
     }
 
-    public void setId(Boolean isDocVersion) {
+    public void setIsDocVersion(Boolean isDocVersion) {
         this.isDocVersion = isDocVersion;
     }
 
