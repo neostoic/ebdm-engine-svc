@@ -16,6 +16,6 @@ public interface DmConfigService {
      * @return configuration value
      */
     public String getValue(String key);
-    
+
     public void setValue(String key, String value);
 }

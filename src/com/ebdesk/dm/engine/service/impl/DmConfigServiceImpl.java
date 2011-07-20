@@ -22,7 +22,7 @@ public class DmConfigServiceImpl implements DmConfigService {
 
     @Autowired
     private DmConfigDao configDao;
-
+    
     /****
      * Get a configuration value from key.
      * @param key the configuration key to find.
@@ -32,7 +32,7 @@ public class DmConfigServiceImpl implements DmConfigService {
         DmConfig config = configDao.findById(key);
         return config.getValue();
     }
-
+    
     public void setValue(String key, String value) {
 //        System.out.println("key = " + key);
         DmConfig config = configDao.findById(key);

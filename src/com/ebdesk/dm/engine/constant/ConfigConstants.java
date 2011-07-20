@@ -19,5 +19,6 @@ public class ConfigConstants {
     public static final String DOC_IMAGE_TYPE = "doc_img_type";
     
     public static final String MAX_DOC_FILE_SIZE = "max_doc_file_size";
-    
+
+    public static final String SOLR_URL = "doc_index.solr_url";
 }

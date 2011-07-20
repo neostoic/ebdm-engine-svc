@@ -29,8 +29,8 @@ public class DmConfigServiceUtil {
     public static String getValue(String key){
         return getConfigService().getValue(key);
     }
-    
+
     public static void setValue(String key, String value) {
         getConfigService().setValue(key, value);
-}
+    }
 }
