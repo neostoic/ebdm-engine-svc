@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.ebdesk.dm.engine.domain;
 
 import java.io.Serializable;
@@ -16,6 +15,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -24,9 +24,10 @@ import javax.persistence.TemporalType;
  *
  * @author user
  */
-@Entity(name="com.ebdesk.dm.engine.domain.DmDocument")
+@Entity(name = "com.ebdesk.dm.engine.domain.DmDocument")
 @Table(name = "dm_document")
 public class DmDocument implements Serializable {
+
     @Id
     @Basic(optional = false)
     @Column(name = "dd_id", nullable = false, length = 36)
@@ -45,37 +46,30 @@ public class DmDocument implements Serializable {
     private String mimeType;
     @Column(name = "dd_is_removed")
     private Boolean isRemoved;
-    
     @Column(name = "dd_is_approved")
     private Boolean approved;
-
     @JoinColumn(name = "ddv_id_last_version", referencedColumnName = "ddv_id", nullable = true)
     @ManyToOne(targetEntity = DmDocumentVersion.class)
     private DmDocumentVersion lastVersion;
-
     @JoinColumn(name = "da_id_created_by", referencedColumnName = "da_id", nullable = false)
     @ManyToOne(targetEntity = DmAccount.class)
     private DmAccount createdBy;
-
     @JoinColumn(name = "da_id_modified_by", referencedColumnName = "da_id", nullable = false)
     @ManyToOne(targetEntity = DmAccount.class)
     private DmAccount modifiedBy;
-
     @JoinColumn(name = "dct_id", referencedColumnName = "dct_id", nullable = true)
     @ManyToOne(targetEntity = DmContentType.class)
     private DmContentType contentType;
-    
     @OneToMany(mappedBy = "document")
     private List<DmDocumentFolder> documentFolderList;
-
     @OneToMany(mappedBy = "document")
     private List<DmDocumentAuthor> documentAuthorList;
-
     @OneToMany(mappedBy = "document")
     private List<DmDocumentKeyword> documentKeywordList;
-
     @OneToMany(mappedBy = "document")
     private List<DmDocumentIndexed> documentIndexedList;
+    @OneToOne(mappedBy="document")
+    private DmDocumentApproval approval;
 
     public DmDocument() {
     }
@@ -83,7 +77,7 @@ public class DmDocument implements Serializable {
     public DmDocument(String id) {
         this.id = id;
     }
-    
+
     public Date getCreatedTime() {
         return createdTime;
     }
@@ -122,8 +116,8 @@ public class DmDocument implements Serializable {
 
     public void setApproved(Boolean approved) {
         this.approved = approved;
-    }    
-    
+    }
+
     public Date getLastModifiedTime() {
         return lastModifiedTime;
     }
@@ -207,9 +201,17 @@ public class DmDocument implements Serializable {
     public List<DmDocumentIndexed> getDocumentIndexedList() {
         return documentIndexedList;
     }
-    
+
     public void setDocumentIndexedList(List<DmDocumentIndexed> documentIndexedList) {
         this.documentIndexedList = documentIndexedList;
-}
+    }
 
+    public void setApproval(DmDocumentApproval approval) {
+        this.approval = approval;
+    }
+
+    public DmDocumentApproval getApproval() {
+        return approval;
+    }
+    
 }

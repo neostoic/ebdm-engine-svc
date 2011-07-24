@@ -7,24 +7,22 @@ package com.ebdesk.dm.engine.domain;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 /**
  *
  * @author ifhayz
  */
-@Entity(name="com.ebdesk.dm.engine.domain.DmDocumentApproval")
-@Table(name = "dm_document_approval")
-public class DmDocumentApproval {
-
+@Entity(name="com.ebdesk.dm.engine.domain.DmDocumentVersionApproval")
+@Table(name = "dm_document_version_approval")
+public class DmDocumentVersionApproval {
+    
     @Id
     @Basic(optional = false)
-    @Column(name = "dda_id", nullable = false, length = 36)
+    @Column(name = "dva_id", nullable = false, length = 36)
     private String id;
     /***
      * dda_approval status:
@@ -32,27 +30,28 @@ public class DmDocumentApproval {
      *  2: APPROVED
      *  3: REJECTED
      */
-    @Column(name = "dda_approval_status")
+    @Column(name = "dva_approval_status")
     private Integer status;
     
-    @Column(name = "dda_comment", nullable = true, length = 4000)
+    @Column(name = "dva_comment", nullable = true, length = 4000)
     private String comment;
-
-    @JoinColumn(name = "dda_approved_by", referencedColumnName = "da_id", nullable = true)
+    
+    @JoinColumn(name = "dva_approved_by", referencedColumnName = "da_id", nullable = true)
     @ManyToOne(targetEntity = DmAccount.class)
     private DmAccount approvedBy;
-        
-    @JoinColumn(name = "dda_document_id", referencedColumnName = "dd_id", nullable = true)
-    @OneToOne(targetEntity = DmDocument.class)
-    private DmDocument document;
+    
+    @JoinColumn(name = "dva_doc_version_id", referencedColumnName = "ddv_id", nullable = true)
+    @ManyToOne(targetEntity = DmDocumentVersion.class)
+    private DmDocumentVersion documentVersion;
 
-    public DmDocumentApproval() {
+    public DmDocumentVersionApproval() {
+        
     }
 
-    public DmDocumentApproval(String id) {
+    public DmDocumentVersionApproval(String id) {
         this.id = id;
     }
-    
+
     public DmAccount getApprovedBy() {
         return approvedBy;
     }
@@ -69,12 +68,12 @@ public class DmDocumentApproval {
         this.comment = comment;
     }
 
-    public DmDocument getDocument() {
-        return document;
+    public DmDocumentVersion getDocumentVersion() {
+        return documentVersion;
     }
 
-    public void setDocument(DmDocument document) {
-        this.document = document;
+    public void setDocumentVersion(DmDocumentVersion documentVersion) {
+        this.documentVersion = documentVersion;
     }
 
     public String getId() {
@@ -92,4 +91,5 @@ public class DmDocumentApproval {
     public void setStatus(Integer status) {
         this.status = status;
     }
+    
 }

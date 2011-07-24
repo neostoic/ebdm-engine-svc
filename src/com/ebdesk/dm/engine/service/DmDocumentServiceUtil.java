@@ -55,6 +55,11 @@ public class DmDocumentServiceUtil {
             String orderBy, String order) {
         return getDocumentService().findDocumentByFolderId(folderId, start, max, orderBy, order);
     }
+    
+    public static List<DmDocument> showDocumentListInFolder(String accountId, String folderId, int start, int max,
+            String orderBy, String order){
+        return getDocumentService().showDocumentListInFolder(accountId, folderId, start, max, orderBy, order);
+    }
 
     /***
      * Number of documents in a folder
@@ -63,6 +68,10 @@ public class DmDocumentServiceUtil {
      */
     public static Integer countDocumentByFolderId(String folderId) {
         return getDocumentService().countDocumentByFolderId(folderId);
+    }
+    
+    public static Integer countDocumentByAccount(String accountId, String folderId){
+        return getDocumentService().countDocumentByAccount(accountId, folderId);
     }
 
     /***
@@ -162,6 +171,10 @@ public class DmDocumentServiceUtil {
     public static void moveDocument(String accountId, String folderIdSource, String [] documentsId, String folderIdDest){
         
     }
+    
+    public static boolean approveDocument(String accountId, String folderId, String documentId, String comment, boolean approved){
+        return getDocumentService().approveDocument(accountId, folderId, documentId, comment, approved);
+    }
 
     public static void deleteVersion(String accountId, String folderId, String versionId){
         getDocumentService().deleteVersion(accountId, folderId, versionId);
@@ -173,10 +186,10 @@ public class DmDocumentServiceUtil {
     }
     
     public static String createNewVersion(String title, String description,
-            String author, String keyword, int versionMajor, int versionMinor,
+            String author, String keyword, String upMode,
             FileItem fileItem, String documentId, String folderId, String accountId){
         return getDocumentService().createNewVersion(title, description, author, keyword, 
-                versionMajor, versionMinor, fileItem, documentId, folderId, accountId);
+                upMode, fileItem, documentId, folderId, accountId);
     }
     
     public static void updateDocument(String title, String description,
