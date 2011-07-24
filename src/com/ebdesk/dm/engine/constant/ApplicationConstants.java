@@ -14,4 +14,8 @@ public class ApplicationConstants {
     public static final int FOLDER_PERMISSION_WRITER = 2;
     public static final int FOLDER_PERMISSION_CONSUMER = 3;
     public static final int FOLDER_PERMISSION_VIEWER = 4;
+    
+    public static final String MINOR = "minor";
+    
+    public static final String MAJOR = "major";
 }

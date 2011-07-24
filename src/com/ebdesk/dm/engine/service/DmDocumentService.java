@@ -38,6 +38,9 @@ public interface DmDocumentService {
     public List<DmDocument> findDocumentByFolderId(String folderId, int start, int max,
             String orderBy, String order);
 
+    public List<DmDocument> showDocumentListInFolder(String accountId, String folderId, int start, int max,
+            String orderBy, String order);
+    
     /***
      * Number of documents in a folder
      * @param folderId the folder identifier.
@@ -45,6 +48,8 @@ public interface DmDocumentService {
      */
     public Integer countDocumentByFolderId(String folderId);
 
+    public Integer countDocumentByAccount(String accountId, String folderId);
+    
     /***
      * Find DmDocument by document identifier.
      * @param documentId the document id.
@@ -140,6 +145,8 @@ public interface DmDocumentService {
     
     public void moveDocument(String accountId, String folderIdSource, String [] documentsId, String folderIdDest);
     
+    public boolean approveDocument(String accountId, String folderId, String documentId, String comment, boolean approved);
+    
     public void deleteVersion(String accountId, String folderId, String versionId);
        
     /***
@@ -155,7 +162,7 @@ public interface DmDocumentService {
     
     
     public String createNewVersion(String title, String description,
-            String author, String keyword, int versionMajor, int versionMinor,
+            String author, String keyword, String upMode,
             FileItem fileItem, String documentId, String folderId, String accountId);
     
     public void updateDocument(String title, String description,

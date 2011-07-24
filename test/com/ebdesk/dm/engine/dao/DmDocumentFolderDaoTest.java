@@ -24,6 +24,9 @@ public class DmDocumentFolderDaoTest extends BaseTest {
 
     @Autowired
     private DmDocumentFolderDao dmDocumentFolderDao;
+    
+    @Autowired
+    private DmFolderPermissionDao folderPermissionDao;
 
     public DmDocumentFolderDaoTest() {
     }
@@ -47,7 +50,7 @@ public class DmDocumentFolderDaoTest extends BaseTest {
     /**
      * Test of findDocumentByFolderId method, of class DmDocumentFolderDaoImpl.
      */
-    @Test
+    //@Test
     public void testFindDocumentByFolderId() {
         List<DmDocument> documents = dmDocumentFolderDao.findDocumentByFolderId("1", 0, 10, "title", null);
         Assert.assertEquals(documents.size(), 2);
@@ -73,7 +76,7 @@ public class DmDocumentFolderDaoTest extends BaseTest {
         
     }
 
-    @Test
+    //@Test
     public void testCountDocumentByFolderId() {
         Integer documentCount = dmDocumentFolderDao.countDocumentByFolderId("1");
         Assert.assertEquals(documentCount, new Integer(2));
@@ -84,11 +87,42 @@ public class DmDocumentFolderDaoTest extends BaseTest {
     }
     
     
-    @Test
+    //@Test
     public void testUpdateNullDocByDocIdAndFolderId() {
         String folderId = "1";
         String docId = "2";
         Integer a = dmDocumentFolderDao.deleteByDocIdAndFolderId(folderId, docId);
         Assert.assertEquals(new Integer(1), a);
+    }
+    
+    @Test
+    public void testFindDocumentByAccount(){
+        String accountId = "a92874e1-b5ac-4478-a9d6-ed01d22922e0";
+        String folderId = "d2847b07-7d41-4d31-8138-e5afb58c1635";
+        
+        Integer permission = folderPermissionDao.findUserFolderPermission(accountId, folderId);
+        List<DmDocument> documents = dmDocumentFolderDao.findDocumentByAccount(accountId, folderId, permission, 0, 10, "","");
+        //List<DmDocument> documents = dmDocumentFolderDao.findDocumentByFolderId(folderId, 0, 10, "createdTime", "desc");
+        for (DmDocument dmDocument : documents) {
+            if (dmDocument.getApproval() != null) {
+                System.out.println("Document ID ("+dmDocument.getId()+") : "+dmDocument.getApproval().getApprovedBy().getName());
+            }else
+                System.out.println("Document ID ("+dmDocument.getId()+") : "+dmDocument.getApproval());
+        }
+    
+    }
+    
+    
+    @Test
+    public void testCountDocumentByAccount(){
+        //String accountId = "a92874e1-b5ac-4478-a9d6-ed01d22922e0";
+        String accountId = "e07f6d15-58d3-4a12-8350-8f3f42883488";
+        String folderId = "d2847b07-7d41-4d31-8138-e5afb58c1635";
+        
+        Integer permission = folderPermissionDao.findUserFolderPermission(accountId, folderId);
+        Integer count = dmDocumentFolderDao.countDocumentByAccount(accountId, folderId, permission);
+        
+        System.out.println("Count : "+count);
+    
     }
 }

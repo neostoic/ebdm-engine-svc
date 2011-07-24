@@ -30,6 +30,9 @@ public class DmDocRenderImageDao extends BaseDmEngineDaoImpl<DmDocRenderImage>{
         return query.executeUpdate();
     }
     
+    public int deleteByVersionId(String versionId){
+        return deleteDocRenderByVersionId(versionId);
+    }
     
     public List<DmDocRenderImage> findByVersionId(String versionId){
         Criteria criteria = getSession().createCriteria(t.getClass());
