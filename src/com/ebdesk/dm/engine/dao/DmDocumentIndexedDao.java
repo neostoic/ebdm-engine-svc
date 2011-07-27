@@ -36,7 +36,7 @@ public class DmDocumentIndexedDao extends BaseDmEngineDaoImpl<DmDocumentIndexed>
 //        disjunction.add(conjunction);
         disjunction.add(Restrictions.isNull("docIndexed.id"));
         disjunction.add(Restrictions.neProperty("lastModifiedTime", "docIndexed.docModifiedTime"));
-        disjunction.add(Restrictions.eq("docIndexed.isNeedReindex", true));
+        disjunction.add(Restrictions.eq("docIndexed.isNeedReindex", true));        
 
         Criteria crit = getSession().createCriteria(DmDocument.class);
         crit.createAlias("documentIndexedList", "docIndexed", CriteriaSpecification.LEFT_JOIN);
@@ -44,6 +44,7 @@ public class DmDocumentIndexedDao extends BaseDmEngineDaoImpl<DmDocumentIndexed>
 //            crit.add(Restrictions.ge("lastModifiedTime", docModificationTime));
 //        }
         crit.add(disjunction);
+        crit.add(Restrictions.eq("approved", true));
         crit.addOrder(Order.desc("docIndexed.isNeedReindex"));
         crit.addOrder(Order.asc("lastModifiedTime"));
         crit.setMaxResults(numDocs);
