@@ -6,12 +6,16 @@
 package com.ebdesk.dm.engine.dao;
 
 import com.ebdesk.dm.engine.domain.DmAccount;
+import com.ebdesk.dm.engine.dto.DmFolderNode;
 import java.util.List;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
+import org.hibernate.SQLQuery;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.transform.Transformers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
@@ -109,5 +113,63 @@ public class DmAccountDaoImpl implements DmAccountDao {
             return false;
         }
         return true;
+    }
+
+    public long checkSpaceUsed(String ownerAccountId) {
+        String sql = "SELECT"
+            + " SUM(dv.ddv_size) as sumSize"
+            + " FROM dm_document_version dv"
+            + " LEFT JOIN dm_document d"
+            + " on dv.dd_id = d.dd_id and dv.ddv_id = d.ddv_id_last_version"
+            + " LEFT JOIN dm_document_folder df"
+            + " on d.dd_id = df.dd_id"
+            + " LEFT JOIN dm_folder f"
+            + " on df.df_id = f.df_id"
+            + " WHERE f.da_id_owner = :ownerAccountId"
+            + " AND d.dd_is_removed = 0"
+            ;
+
+        SQLQuery query = sessionFactory.getCurrentSession().createSQLQuery(sql);
+
+        query.setString("ownerAccountId", ownerAccountId);
+
+        query.addScalar("sumSize", Hibernate.LONG);
+
+        Long sumSize = (Long) query.uniqueResult();
+        if (sumSize != null) {
+            return sumSize;
+        }
+
+        return 0;
+    }
+
+    public long checkSpaceUsedExcludeDocument(String ownerAccountId, String documentId) {
+        String sql = "SELECT"
+            + " SUM(dv.ddv_size) as sumSize"
+            + " FROM dm_document_version dv"
+            + " LEFT JOIN dm_document d"
+            + " on dv.dd_id = d.dd_id and dv.ddv_id = d.ddv_id_last_version"
+            + " LEFT JOIN dm_document_folder df"
+            + " on d.dd_id = df.dd_id"
+            + " LEFT JOIN dm_folder f"
+            + " on df.df_id = f.df_id"
+            + " WHERE f.da_id_owner = :ownerAccountId"
+            + " AND d.dd_is_removed = 0"
+            + " AND d.dd_id <> :documentId"
+            ;
+
+        SQLQuery query = sessionFactory.getCurrentSession().createSQLQuery(sql);
+
+        query.setString("ownerAccountId", ownerAccountId);
+        query.setString("documentId", documentId);
+
+        query.addScalar("sumSize", Hibernate.LONG);
+
+        Long sumSize = (Long) query.uniqueResult();
+        if (sumSize != null) {
+            return sumSize;
+        }
+
+        return 0;
     }
 }

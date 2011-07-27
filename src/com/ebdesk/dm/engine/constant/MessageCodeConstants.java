@@ -92,6 +92,11 @@ public class MessageCodeConstants {
      * Mesage ERROR Account when account not found. (EBDM-30200001)
      */
     public final static String EBDM_ERROR_ACCOUNT_GENERAL_NO_ACCOUNT = EBDM_ERROR_ACCOUNT_GENERAL+"001";
+    /***
+     * Mesage ERROR Account when account space quota is insufficient for new document. (EBDM-30100002)
+     */
+    public final static String EBDM_ERROR_ACCOUNT_GENERAL_INSUFFICIENT_QUOTA = EBDM_ERROR_ACCOUNT_GENERAL+"002";
+
     
     
     /***

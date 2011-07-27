@@ -22,4 +22,6 @@ public interface DmAccountDao {
     public DmAccount getByNameExcludeById(String name, String id);
     public boolean update(DmAccount account);
     public DmAccount getActive(String id);
+    public long checkSpaceUsed(String ownerAccountId);
+    public long checkSpaceUsedExcludeDocument(String ownerAccountId, String documentId);
 }

@@ -48,6 +48,7 @@ import com.ebdesk.dm.engine.dto.DocumentCompare;
 import com.ebdesk.dm.engine.dto.DocumentVersionDownload;
 import com.ebdesk.dm.engine.dto.DocumentView;
 import com.ebdesk.dm.engine.exception.DocumentNotFoundException;
+import com.ebdesk.dm.engine.exception.ExceedQuotaException;
 import com.ebdesk.dm.engine.exception.FolderNotFoundException;
 import com.ebdesk.dm.engine.exception.InsufficientPriviledgeException;
 import com.ebdesk.dm.engine.exception.UserAccountNotFoundException;
@@ -584,9 +585,7 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         }
         
         boolean isOwner = isOwner(accountId, folderId);
-        
-        
-
+                
         String documentId = UUID.randomUUID().toString();
         String versionId = UUID.randomUUID().toString();
         String fileName = versionId + "_" + fileItem.getName();
@@ -613,6 +612,16 @@ public class DmDocumentServiceImpl implements DmDocumentService {
                 }
             }
         }
+
+        // start - check owner's space quota
+        DmAccount accountOwner = accountDao.get(folder.getOwner().getId());
+        long spaceQuota = accountOwner.getQuota().intValue() * 1048576;
+        long spaceUsed = accountDao.checkSpaceUsed(folder.getOwner().getId());
+        if (spaceQuota - spaceUsed < file.length()) {
+            // TODO: should delete file & folder already created on filesystem
+            throw new ExceedQuotaException(MessageCodeConstants.EBDM_ERROR_ACCOUNT_GENERAL_INSUFFICIENT_QUOTA + " : " + "Insufficient account quota.");
+        }
+        // end - check owner's space quota
 
         String fileExtension = FileUtils.getFileExtension(file.getAbsolutePath());
         DmContentType contentType = contentTypeDao.findByFileExtension(fileExtension);
@@ -669,7 +678,8 @@ public class DmDocumentServiceImpl implements DmDocumentService {
             }
         }
 
-        Long fileSize = file.length() / 1024;
+//        Long fileSize = file.length() / 1024;
+        Long fileSize = file.length();
         documentVersion.setSize(fileSize);
         documentVersion.setModifiedTime(now);
         documentVersion.setModifiedBy(account);
@@ -808,6 +818,16 @@ public class DmDocumentServiceImpl implements DmDocumentService {
             }
         }
 
+        // start - check owner's space quota
+        DmAccount accountOwner = accountDao.get(folder.getOwner().getId());
+        long spaceQuota = accountOwner.getQuota().intValue() * 1048576;
+        long spaceUsed = accountDao.checkSpaceUsedExcludeDocument(folder.getOwner().getId(), documentId);
+        if (spaceQuota - spaceUsed < file.length()) {
+            // TODO: should delete file & folder already created on filesystem
+            throw new ExceedQuotaException(MessageCodeConstants.EBDM_ERROR_ACCOUNT_GENERAL_INSUFFICIENT_QUOTA + " : " + "Insufficient account quota.");
+        }
+        // end - check owner's space quota
+
         Date now = new Date();
         document.setTitle(title);
         document.setDescription(description);
@@ -871,7 +891,8 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         }
 
 
-        Long fileSize = file.length() / 1024;
+//        Long fileSize = file.length() / 1024;
+        Long fileSize = file.length();
         documentVersion.setSize(fileSize);
         documentVersion.setModifiedTime(now);
         documentVersion.setModifiedBy(account);
