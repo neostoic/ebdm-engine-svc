@@ -54,4 +54,15 @@ public class DmDocumentDao extends BaseDmEngineDaoImpl<DmDocument> {
         return query.executeUpdate();
     }
 
+    public void setIsRemovedByFolder(String folderId) {
+        String sqlSub = "SELECT"
+            + " df.dd_id"
+            + " from dm_document_folder df"
+            + " where df.df_id = :folderId"
+            ;
+        
+        Query query = getSession().createSQLQuery("UPDATE dm_document SET dd_is_removed = 1 WHERE dd_id in (" + sqlSub + ")");
+        query.setString("folderId", folderId);
+        query.executeUpdate();
+    }
 }

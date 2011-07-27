@@ -76,8 +76,17 @@ public class DmFolderDao extends BaseDmEngineDaoImpl<DmFolder> {
         }
         
         if (folder != null) {
+            Disjunction disjunction = Restrictions.disjunction();
+            disjunction.add(Restrictions.isNull("docApproval.id"));
+            disjunction.add(Restrictions.ne("docApproval.status", ApplicationConstants.APPROVAL_STATUS_REJECTED));
+
             Criteria crit = getSession().createCriteria(DmDocumentFolder.class);
+            crit.createAlias("document", "docInfo");
+            crit.createAlias("docInfo.approval", "docApproval", CriteriaSpecification.LEFT_JOIN);
             crit.add(Restrictions.eq("folder", folder));
+//            crit.add(Restrictions.eq("docInfo.approved", true));
+            crit.add(disjunction);
+            
             return crit.list().size();
         }
 

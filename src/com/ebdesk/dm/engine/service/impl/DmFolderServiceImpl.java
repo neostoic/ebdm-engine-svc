@@ -7,6 +7,8 @@ package com.ebdesk.dm.engine.service.impl;
 
 import com.ebdesk.dm.engine.constant.ApplicationConstants;
 import com.ebdesk.dm.engine.dao.DmAccountDao;
+import com.ebdesk.dm.engine.dao.DmDocumentDao;
+import com.ebdesk.dm.engine.dao.DmDocumentFolderDao;
 import com.ebdesk.dm.engine.dao.DmFolderDao;
 import com.ebdesk.dm.engine.dao.DmFolderPermissionDao;
 import com.ebdesk.dm.engine.dao.DmFolderRelatedDao;
@@ -39,6 +41,10 @@ public class DmFolderServiceImpl implements DmFolderService {
     private DmAccountDao accountDao;
     @Autowired
     private DmFolderRelatedDao folderRelatedDao;
+    @Autowired
+    private DmDocumentFolderDao docFolderDao;
+    @Autowired
+    private DmDocumentDao docDao;
 
     public boolean save(DmFolder folder) {
         if(folder.getId() == null)
@@ -69,6 +75,11 @@ public class DmFolderServiceImpl implements DmFolderService {
 
 
     public boolean delete(DmFolder folder) {
+        if (folder == null) {
+            return false;
+        }
+        docDao.setIsRemovedByFolder(folder.getId());
+        docFolderDao.deleteByFolderId(folder.getId());
         folderDao.delete(folder);
         return true;
     }

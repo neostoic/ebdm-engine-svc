@@ -18,4 +18,8 @@ public class ApplicationConstants {
     public static final String MINOR = "minor";
     
     public static final String MAJOR = "major";
+
+    public static final int APPROVAL_STATUS_REQUESTED = 1;
+    public static final int APPROVAL_STATUS_APPROVED = 2;
+    public static final int APPROVAL_STATUS_REJECTED = 3;
 }

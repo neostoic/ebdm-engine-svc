@@ -236,4 +236,11 @@ public class DmDocumentFolderDao extends BaseDmEngineDaoImpl<DmDocumentFolder> {
         }
         return null;
     }
+
+    public int deleteByFolderId(String folderId) {
+        String hql = "DELETE FROM " + DmDocumentFolder.class.getName() + " a WHERE a.folder.id = :folderId";
+        Query query = getSession().createQuery(hql);
+        query.setString("folderId", folderId);
+        return query.executeUpdate();
+    }
 }
