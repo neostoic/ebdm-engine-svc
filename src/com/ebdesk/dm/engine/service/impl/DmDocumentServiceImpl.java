@@ -18,6 +18,7 @@ import com.ebdesk.dm.engine.dao.DmDocumentAuthorDao;
 import com.ebdesk.dm.engine.dao.DmDocumentCommentDao;
 import com.ebdesk.dm.engine.dao.DmDocumentDao;
 import com.ebdesk.dm.engine.dao.DmDocumentFolderDao;
+import com.ebdesk.dm.engine.dao.DmDocumentIndexedDao;
 import com.ebdesk.dm.engine.dao.DmDocumentKeywordDao;
 import com.ebdesk.dm.engine.dao.DmDocumentLockDao;
 import com.ebdesk.dm.engine.dao.DmDocumentVersionDao;
@@ -112,6 +113,8 @@ public class DmDocumentServiceImpl implements DmDocumentService {
     private DmDocViewAnnotationDao docViewAnnotationDao;
     @Autowired
     private DmDocumentCommentDao documentCommentDao;
+    @Autowired
+    private DmDocumentIndexedDao documentIndexedDao;
 
     @Autowired
     private DmDocumentApprovalDao documentApprovalDao;
@@ -452,6 +455,8 @@ public class DmDocumentServiceImpl implements DmDocumentService {
                 && (document.getApproval().getStatus() == 1 || document.getApproval().getStatus() == 3) && 
                 document.getCreatedBy().getId().equals(accountId))) {
             document.setIsRemoved(Boolean.TRUE);
+            Date now = new Date();
+            document.setLastModifiedTime(now);
             documentDao.update(document);
             int a = documentFolderDao.deleteByDocIdAndFolderId(folderId, documentId);
         } else {
@@ -529,9 +534,11 @@ public class DmDocumentServiceImpl implements DmDocumentService {
                 //Delete the document.
                 DmDocument document = documentDao.findById(documentId);
                 document.setIsRemoved(Boolean.TRUE);
+                Date now = new Date();
+                document.setLastModifiedTime(now);
                 documentDao.update(document);
                 documentFolderDao.deleteByDocIdAndFolderId(folderId, documentId);
-            } else {
+            } else {                
                 // Check whether document version is last version or not 
                 if (documentVersion.getId().equals(documentVersion.getDocument().getLastVersion().getId())) {
                     List<DmDocumentVersion> versions = documentVersionDao.findDocumentVersionByDocId(documentId, 0, 2, "version", "desc");
@@ -1469,6 +1476,11 @@ public class DmDocumentServiceImpl implements DmDocumentService {
             if (folder != null) {
                 docFolder.setFolder(folder);
                 documentFolderDao.update(docFolder);
+
+                // start - set document to be reindexed
+                documentIndexedDao.setReindexByDocument(documentId);
+                // end - set document to be reindexed
+
                 return true;
             }
         }

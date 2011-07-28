@@ -6,9 +6,9 @@
 package com.ebdesk.dm.engine.dao;
 
 import com.ebdesk.dm.engine.domain.DmDocument;
+import java.util.Date;
 import java.util.List;
 import org.hibernate.Query;
-import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -48,9 +48,11 @@ public class DmDocumentDao extends BaseDmEngineDaoImpl<DmDocument> {
     
     
     public int updateLastVersion(String lastVersionId, String documentId){
-        Query query = getSession().createSQLQuery("UPDATE dm_document SET ddv_id_last_version = :versionId WHERE dd_id = :documentId");
+        Date now = new Date();
+        Query query = getSession().createSQLQuery("UPDATE dm_document SET ddv_id_last_version = :versionId, dd_time_last_modify = :currentDate WHERE dd_id = :documentId");
         query.setString("versionId", lastVersionId);
         query.setString("documentId", documentId);
+        query.setTimestamp("currentDate", now);
         return query.executeUpdate();
     }
 

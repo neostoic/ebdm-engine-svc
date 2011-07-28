@@ -94,7 +94,7 @@ public class DmDocumentIndexedDao extends BaseDmEngineDaoImpl<DmDocumentIndexed>
             + " f.df_id = :folderId"
             ;
 
-        String deleteQuery = "update"
+        String queryStr = "update"
                 + " dm_document_indexed"
                 + " set"
                 + " ddi_is_need_reindex = 1"
@@ -102,9 +102,25 @@ public class DmDocumentIndexedDao extends BaseDmEngineDaoImpl<DmDocumentIndexed>
                 + " dd_id in (" + sqlSub + ")"
                 ;
 
-        Query query = getSession().createSQLQuery(deleteQuery);
+        Query query = getSession().createSQLQuery(queryStr);
 
         query.setString("folderId", folderId);
+
+        query.executeUpdate();
+    }
+
+    public void setReindexByDocument(String documentId) {
+        String queryStr = "update"
+                + " dm_document_indexed"
+                + " set"
+                + " ddi_is_need_reindex = 1"
+                + " WHERE"
+                + " dd_id = :documentId"
+                ;
+
+        Query query = getSession().createSQLQuery(queryStr);
+
+        query.setString("documentId", documentId);
 
         query.executeUpdate();
     }
