@@ -47,11 +47,16 @@ public class DmDocumentVersionDaoTest extends BaseTest {
     /**
      * Test of findDocumentVersionByDocId method, of class DmDocumentVersionDao.
      */
-    //@Test
+    @Test
     public void testFindDocumentVersionByDocId() {
-        //List<DmDocumentVersion> versions = documentVersionDao.findDocumentVersionByDocId("1", 0, 10, "date", "desc");
-        List<DmDocumentVersion> versions = DmDocumentServiceUtil.findDocVersionByDocId("1", 0, 10, "date", "desc");
-        System.out.println("SIZE : " + versions.size());
+        List<DmDocumentVersion> versions = documentVersionDao.findDocumentVersionByDocId("02dfb409-c386-4541-b844-6a7b3dcd25ce", 0, 10, null, null);
+        for (DmDocumentVersion dmDocumentVersion : versions) {
+            if (dmDocumentVersion.getApproval() == null) {
+                System.out.println("APPROVAL NULL");
+            }else {
+                System.out.println("APPROVAL ID : "+dmDocumentVersion.getApproval().getId() + " , "+dmDocumentVersion.getApproval().getStatus());
+            }
+        }
     }
 
     //@Test
@@ -87,12 +92,12 @@ public class DmDocumentVersionDaoTest extends BaseTest {
         System.out.println("Result : " + result);
     }
 
-    @Test
+//    @Test
     public void testCountAllNotRenderedVersion() {
         System.out.println("Count : "+documentVersionDao.countAllNotRenderedVersion());
     }
     
-    @Test
+//    @Test
     public void testFindNotRenderedVersion() {
         System.out.println("Count : "+documentVersionDao.findNotRenderedVersion(0, Integer.MAX_VALUE).size());
     }

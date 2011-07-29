@@ -7,12 +7,16 @@ package com.ebdesk.dm.engine.dao;
 
 import com.ebdesk.dm.engine.constant.DatabaseConstants;
 import com.ebdesk.dm.engine.domain.DmDocumentVersion;
+import com.ebdesk.dm.engine.domain.DmDocumentVersionApproval;
+import com.ebdesk.dm.engine.domain.util.ApprovalStatus;
 import java.util.List;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
+import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -21,7 +25,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository("dmDocumentVersionDao")
 public class DmDocumentVersionDao extends BaseDmEngineDaoImpl<DmDocumentVersion> {
-
+    
     public DmDocumentVersionDao() {
         this.t = new DmDocumentVersion();
     }
@@ -38,6 +42,7 @@ public class DmDocumentVersionDao extends BaseDmEngineDaoImpl<DmDocumentVersion>
     public List<DmDocumentVersion> findDocumentVersionByDocId(String docId, int start, int max,
             String orderBy, String order){
         Criteria criteria = getSession().createCriteria(DmDocumentVersion.class);
+        criteria.createAlias("approval", "a", CriteriaSpecification.LEFT_JOIN);
         criteria.add(Restrictions.eq("document.id", docId));
 
         if (orderBy != null && !"".equals(orderBy)) {
@@ -60,7 +65,7 @@ public class DmDocumentVersionDao extends BaseDmEngineDaoImpl<DmDocumentVersion>
 
         criteria.setFirstResult(start);
         criteria.setMaxResults(max);
-
+        
         return criteria.list();
     }
     
@@ -106,4 +111,21 @@ public class DmDocumentVersionDao extends BaseDmEngineDaoImpl<DmDocumentVersion>
         return criteria.list();
     }
     
+    
+    public DmDocumentVersion findRequestedVersionByDocId(String documentId){
+        Criteria criteria = getSession().createCriteria(DmDocumentVersion.class);
+        criteria.createAlias("approval", "a", CriteriaSpecification.LEFT_JOIN);
+        criteria.add(Restrictions.eq("document.id", documentId));
+        criteria.add(Restrictions.eq("a.status", ApprovalStatus.REQUESTED.getStatus()));
+        criteria.add(Restrictions.eq("approved", Boolean.FALSE));
+        criteria.setFirstResult(0);
+        criteria.setMaxResults(1);
+        List<DmDocumentVersion> versions = criteria.list();
+        if (versions.size() > 0) {
+            return versions.get(0);
+        }
+               
+        
+        return null;
+    }
 }

@@ -31,6 +31,9 @@ public class DmDocumentFolderDao extends BaseDmEngineDaoImpl<DmDocumentFolder> {
     @Autowired
     private DmDocumentApprovalDao documentApprovalDao;
     
+    @Autowired
+    private DmDocumentVersionDao documentVersionDao;
+    
     
     public DmDocumentFolderDao() {
         this.t = new DmDocumentFolder();
@@ -141,6 +144,7 @@ public class DmDocumentFolderDao extends BaseDmEngineDaoImpl<DmDocumentFolder> {
         List<DmDocument> documents = query.list();
         for (DmDocument dmDocument : documents) {
             dmDocument.setApproval(documentApprovalDao.findByDocId(dmDocument.getId()));
+            dmDocument.setRequestedVersion(documentVersionDao.findRequestedVersionByDocId(dmDocument.getId()));            
         }
         
         return documents;

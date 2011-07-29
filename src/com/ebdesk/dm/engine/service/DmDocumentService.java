@@ -147,6 +147,9 @@ public interface DmDocumentService {
     
     public boolean approveDocument(String accountId, String folderId, String documentId, String comment, boolean approved);
     
+    public boolean approveVersion(String accountId, String folderId, String documentId, 
+            String versionId, String comment, boolean approved);
+    
     public void deleteVersion(String accountId, String folderId, String versionId);
        
     /***
@@ -195,7 +198,9 @@ public interface DmDocumentService {
     
     public boolean deleteAnnotation(String accountId, String folderId, String docVersionId, int page);
     
-    public boolean isDocumentLocked(String docId);    
+    public boolean isDocumentLocked(String docId);
+    
+    public boolean isDocumentCheckedOut(String docId);    
     
     public boolean isOwner(String accountId, String folderId);
 

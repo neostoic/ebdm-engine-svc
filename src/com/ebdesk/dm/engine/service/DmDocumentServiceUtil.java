@@ -175,6 +175,11 @@ public class DmDocumentServiceUtil {
     public static boolean approveDocument(String accountId, String folderId, String documentId, String comment, boolean approved){
         return getDocumentService().approveDocument(accountId, folderId, documentId, comment, approved);
     }
+    
+    public static boolean approveVersion(String accountId, String folderId, String documentId, 
+            String versionId, String comment, boolean approved){
+        return getDocumentService().approveVersion(accountId, folderId, documentId, versionId, comment, approved);
+    }
 
     public static void deleteVersion(String accountId, String folderId, String versionId){
         getDocumentService().deleteVersion(accountId, folderId, versionId);
@@ -235,6 +240,10 @@ public class DmDocumentServiceUtil {
     
     public static boolean isDocumentLocked(String docId) {
         return getDocumentService().isDocumentLocked(docId);
+    }
+    
+    public static boolean isDocumentCheckedOut(String docId){
+        return getDocumentService().isDocumentCheckedOut(docId);
     }
 
     public static boolean isOwner(String accountId, String folderId) {
