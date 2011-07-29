@@ -14,6 +14,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -73,6 +74,9 @@ public class DmDocumentVersion implements Serializable {
     @JoinColumn(name = "da_id_modified_by", referencedColumnName = "da_id", nullable = false)
     @ManyToOne(targetEntity = DmAccount.class)
     private DmAccount modifiedBy;
+    
+    @OneToOne(mappedBy="documentVersion")
+    private DmDocumentVersionApproval approval;
 
     public DmDocumentVersion() {
     }
@@ -219,6 +223,14 @@ public class DmDocumentVersion implements Serializable {
 
     public void setApproved(Boolean approved) {
         this.approved = approved;
+    }
+
+    public DmDocumentVersionApproval getApproval() {
+        return approval;
+    }
+
+    public void setApproval(DmDocumentVersionApproval approval) {
+        this.approval = approval;
     }
     
 }

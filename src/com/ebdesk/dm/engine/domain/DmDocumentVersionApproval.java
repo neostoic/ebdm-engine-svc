@@ -10,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 /**
@@ -41,7 +42,7 @@ public class DmDocumentVersionApproval {
     private DmAccount approvedBy;
     
     @JoinColumn(name = "dva_doc_version_id", referencedColumnName = "ddv_id", nullable = true)
-    @ManyToOne(targetEntity = DmDocumentVersion.class)
+    @OneToOne(targetEntity = DmDocumentVersion.class)
     private DmDocumentVersion documentVersion;
 
     public DmDocumentVersionApproval() {

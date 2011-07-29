@@ -15,12 +15,14 @@ import com.ebdesk.dm.engine.dao.DmDocRenderImageDao;
 import com.ebdesk.dm.engine.dao.DmDocViewAnnotationDao;
 import com.ebdesk.dm.engine.dao.DmDocumentApprovalDao;
 import com.ebdesk.dm.engine.dao.DmDocumentAuthorDao;
+import com.ebdesk.dm.engine.dao.DmDocumentCheckoutDao;
 import com.ebdesk.dm.engine.dao.DmDocumentCommentDao;
 import com.ebdesk.dm.engine.dao.DmDocumentDao;
 import com.ebdesk.dm.engine.dao.DmDocumentFolderDao;
 import com.ebdesk.dm.engine.dao.DmDocumentIndexedDao;
 import com.ebdesk.dm.engine.dao.DmDocumentKeywordDao;
 import com.ebdesk.dm.engine.dao.DmDocumentLockDao;
+import com.ebdesk.dm.engine.dao.DmDocumentVersionApprovalDao;
 import com.ebdesk.dm.engine.dao.DmDocumentVersionDao;
 import com.ebdesk.dm.engine.dao.DmFolderDao;
 import com.ebdesk.dm.engine.dao.DmFolderPermissionDao;
@@ -33,11 +35,13 @@ import com.ebdesk.dm.engine.domain.DmDocViewAnnotation;
 import com.ebdesk.dm.engine.domain.DmDocument;
 import com.ebdesk.dm.engine.domain.DmDocumentApproval;
 import com.ebdesk.dm.engine.domain.DmDocumentAuthor;
+import com.ebdesk.dm.engine.domain.DmDocumentCheckout;
 import com.ebdesk.dm.engine.domain.DmDocumentComment;
 import com.ebdesk.dm.engine.domain.DmDocumentFolder;
 import com.ebdesk.dm.engine.domain.DmDocumentKeyword;
 import com.ebdesk.dm.engine.domain.DmDocumentLock;
 import com.ebdesk.dm.engine.domain.DmDocumentVersion;
+import com.ebdesk.dm.engine.domain.DmDocumentVersionApproval;
 import com.ebdesk.dm.engine.domain.DmFolder;
 import com.ebdesk.dm.engine.domain.util.ApprovalStatus;
 import com.ebdesk.dm.engine.domain.util.DocumentAccessHistory;
@@ -104,6 +108,8 @@ public class DmDocumentServiceImpl implements DmDocumentService {
     @Autowired
     private DmDocumentLockDao documentLockDao;
     @Autowired
+    private DmDocumentCheckoutDao documentCheckoutDao;
+    @Autowired
     private DmDocumentAuthorDao documentAuthorDao;
     @Autowired
     private DmContentTypeDao contentTypeDao;
@@ -115,7 +121,8 @@ public class DmDocumentServiceImpl implements DmDocumentService {
     private DmDocumentCommentDao documentCommentDao;
     @Autowired
     private DmDocumentIndexedDao documentIndexedDao;
-
+    @Autowired
+    private DmDocumentVersionApprovalDao documentVersionApprovalDao;
     @Autowired
     private DmDocumentApprovalDao documentApprovalDao;
     /****
@@ -261,7 +268,7 @@ public class DmDocumentServiceImpl implements DmDocumentService {
                 throw new UserAccountNotFoundException("Account doesn't exist.");
             }
             
-            if (!document.getApproved()) {
+            if (document.getApproved() !=null && !document.getApproved()) {
                 document.setApproval(documentApprovalDao.findByDocId(documentId));
             }
 
@@ -309,7 +316,7 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         if (!DatabaseConstants.ORDER_DESC.equals(order)) {
             order = "asc";
         }
-
+        
         return documentVersionDao.findDocumentVersionByDocId(documentId, start, max, orderBy, order);
     }
 
@@ -520,6 +527,47 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         }        
     }
     
+    public boolean approveVersion(String accountId, String folderId, String documentId, 
+            String versionId, String comment, boolean approved){
+        if (isOwner(accountId, folderId)) {
+            DmDocument document = documentDao.findById(documentId);
+            if (document == null) {
+                throw new IllegalArgumentException("No Document Found");
+            }
+            
+            DmDocumentVersion version = documentVersionDao.findById(versionId);
+            if (version == null) {
+                throw new IllegalArgumentException("No Document Version Found");
+            }
+                        
+            DmDocumentVersionApproval approval = documentVersionApprovalDao.findByDocVersionId(versionId);
+            if (approval == null) {
+                throw new IllegalArgumentException("No Document Version Approval Found");
+            }
+            
+            approval.setApprovedBy(accountDao.get(accountId));
+            approval.setComment(comment);
+            if (approved){
+                approval.setStatus(ApprovalStatus.APPROVED.getStatus());
+                version.setApproved(Boolean.TRUE);
+                documentVersionDao.update(version);
+                
+                document.setLastVersion(version);
+                document.setLastModifiedTime(new Date());
+                documentDao.update(document);
+            }else{ 
+                approval.setStatus(ApprovalStatus.REJECT.getStatus());
+            }
+            documentVersionApprovalDao.update(approval);
+            
+            documentCheckoutDao.deleteByDocId(documentId);
+            
+            return true;
+        } else {
+            throw new InsufficientPriviledgeException("Account doesn't have permission to lock document.");
+        }        
+    }
+    
     public void deleteVersion(String accountId, String folderId, String versionId) {
         if (isCanCreate(accountId, folderId)) {
             DmDocumentVersion documentVersion = documentVersionDao.findById(versionId);
@@ -592,7 +640,7 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         }
         
         boolean isOwner = isOwner(accountId, folderId);
-                
+
         String documentId = UUID.randomUUID().toString();
         String versionId = UUID.randomUUID().toString();
         String fileName = versionId + "_" + fileItem.getName();
@@ -690,6 +738,7 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         documentVersion.setSize(fileSize);
         documentVersion.setModifiedTime(now);
         documentVersion.setModifiedBy(account);
+        documentVersion.setApproved(Boolean.TRUE);
         documentVersionDao.save(documentVersion);
 
         if (folder.getIsNeedApproval() && !isOwner) {
@@ -798,6 +847,7 @@ public class DmDocumentServiceImpl implements DmDocumentService {
                     + "Account " + account.getName() + " cannot create a new document version in folder " + folder.getName());
         }
 
+        boolean isOwner = isOwner(accountId, folderId);
 
         String versionId = UUID.randomUUID().toString();
         String fileName = versionId + "_" + fileItem.getName();
@@ -867,6 +917,7 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         documentVersion.setDocument(document);
         documentVersion.setFileName(fileItem.getName());
         documentVersion.setFilePath(file.getAbsolutePath());
+        documentVersion.setApproved((folder.getIsNeedApproval() && isOwner) || (!folder.getIsNeedApproval()));
 
         PDFContent pdfContent = null;
 
@@ -905,9 +956,23 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         documentVersion.setModifiedBy(account);
         documentVersionDao.save(documentVersion);
 
-        document.setLastVersion(documentVersion);
-        documentDao.update(document);
-
+        
+        if ((folder.getIsNeedApproval() && isOwner) || (!folder.getIsNeedApproval())) {
+            document.setLastVersion(documentVersion);
+            documentDao.update(document);
+        } else {
+            DmDocumentVersionApproval approval = new DmDocumentVersionApproval(UUID.randomUUID().toString());
+            approval.setStatus(ApprovalStatus.REQUESTED.getStatus());
+            approval.setDocumentVersion(documentVersion);
+            documentVersionApprovalDao.save(approval);
+            
+            DmDocumentCheckout checkout = new DmDocumentCheckout(UUID.randomUUID().toString());
+            checkout.setAccount(account);
+            checkout.setTimeCheckout(now);
+            checkout.setDocument(document);
+            documentCheckoutDao.save(checkout);
+        }
+        
         documentKeywordDao.deleteByDocumentId(documentId);
         if (keyword != null && !"".equals(keyword)) {
             String[] arrayKeyword = keyword.split(",");
@@ -1392,6 +1457,14 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         return false;
     }
 
+    public boolean isDocumentCheckedOut(String docId){
+        DmDocumentCheckout documentCheckout = documentCheckoutDao.findByDocumentId(docId);
+        if (documentCheckout != null) {
+            return true;
+        }
+        return false;
+    }
+    
     public boolean isOwner(String accountId, String folderId) {
         Integer permission = folderPermissionDao.findUserFolderPermission(accountId, folderId);
         if (FolderPermission.OWNER.getPermission() == permission) {
