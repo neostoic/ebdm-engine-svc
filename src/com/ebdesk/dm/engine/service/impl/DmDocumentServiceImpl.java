@@ -1517,7 +1517,7 @@ public class DmDocumentServiceImpl implements DmDocumentService {
 
     public boolean isCanLock(String accountId, String folderId) {
         Integer permission = folderPermissionDao.findUserFolderPermission(accountId, folderId);
-        if (FolderPermission.OWNER.getPermission() == permission || FolderPermission.WRITER.getPermission() == permission) {
+        if (FolderPermission.OWNER.getPermission() == permission) {
             return true;
         }
         return false;
