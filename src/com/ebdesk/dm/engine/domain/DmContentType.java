@@ -16,7 +16,8 @@ import javax.persistence.Table;
  * @author Muhammad Rifai
  */
 @Entity(name="com.ebdesk.dm.engine.domain.DmContentType")
-@Table(name = "dm_content_type", catalog = "eb_dm_engine", schema = "")
+//@Table(name = "dm_content_type", catalog = "eb_dm_engine", schema = "")
+@Table(name = "dm_content_type")
 public class DmContentType implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
