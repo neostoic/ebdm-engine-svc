@@ -6,7 +6,6 @@
 package com.ebdesk.dm.engine.dao;
 
 import com.ebdesk.dm.engine.domain.DmAccount;
-import com.ebdesk.dm.engine.dto.DmFolderNode;
 import java.util.List;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
@@ -15,7 +14,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.transform.Transformers;
+import org.hibernate.impl.SessionFactoryImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
@@ -116,6 +115,7 @@ public class DmAccountDaoImpl implements DmAccountDao {
     }
 
     public long checkSpaceUsed(String ownerAccountId) {
+        SessionFactoryImpl sessionFactImpl = (SessionFactoryImpl) sessionFactory;        
         String sql = "SELECT"
             + " SUM(dv.ddv_size) as sumSize"
             + " FROM dm_document_version dv"
@@ -126,8 +126,13 @@ public class DmAccountDaoImpl implements DmAccountDao {
             + " LEFT JOIN dm_folder f"
             + " on df.df_id = f.df_id"
             + " WHERE f.da_id_owner = :ownerAccountId"
-            + " AND d.dd_is_removed = 0"
             ;
+        if (sessionFactImpl.getDialect() instanceof org.hibernate.dialect.PostgreSQLDialect) {
+            sql = sql + " AND d.dd_is_removed = FALSE";
+        }
+        else {
+            sql = sql + " AND d.dd_is_removed = 0";
+        }
 
         SQLQuery query = sessionFactory.getCurrentSession().createSQLQuery(sql);
 
@@ -144,6 +149,7 @@ public class DmAccountDaoImpl implements DmAccountDao {
     }
 
     public long checkSpaceUsedExcludeDocument(String ownerAccountId, String documentId) {
+        SessionFactoryImpl sessionFactImpl = (SessionFactoryImpl) sessionFactory;
         String sql = "SELECT"
             + " SUM(dv.ddv_size) as sumSize"
             + " FROM dm_document_version dv"
@@ -154,9 +160,14 @@ public class DmAccountDaoImpl implements DmAccountDao {
             + " LEFT JOIN dm_folder f"
             + " on df.df_id = f.df_id"
             + " WHERE f.da_id_owner = :ownerAccountId"
-            + " AND d.dd_is_removed = 0"
             + " AND d.dd_id <> :documentId"
             ;
+        if (sessionFactImpl.getDialect() instanceof org.hibernate.dialect.PostgreSQLDialect) {
+            sql = sql + " AND d.dd_is_removed = FALSE";
+        }
+        else {
+            sql = sql + " AND d.dd_is_removed = 0";
+        }
 
         SQLQuery query = sessionFactory.getCurrentSession().createSQLQuery(sql);
 

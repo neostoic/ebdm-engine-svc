@@ -15,6 +15,7 @@ import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.impl.SessionFactoryImpl;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -85,6 +86,8 @@ public class DmDocumentIndexedDao extends BaseDmEngineDaoImpl<DmDocumentIndexed>
     }
 
     public void setReindexByFolder(String folderId) {
+        SessionFactoryImpl sessionFactImpl = (SessionFactoryImpl) getSession().getSessionFactory();
+        
         String sqlSub = "SELECT"
             + " df.dd_id"
             + " from dm_document_folder df"
@@ -97,8 +100,15 @@ public class DmDocumentIndexedDao extends BaseDmEngineDaoImpl<DmDocumentIndexed>
         String queryStr = "update"
                 + " dm_document_indexed"
                 + " set"
-                + " ddi_is_need_reindex = 1"
-                + " WHERE"
+                ;
+        if (sessionFactImpl.getDialect() instanceof org.hibernate.dialect.PostgreSQLDialect) {
+            queryStr = queryStr + " ddi_is_need_reindex = TRUE";
+        }
+        else {
+            queryStr = queryStr + " ddi_is_need_reindex = 1";
+        }
+
+        queryStr = queryStr + " WHERE"
                 + " dd_id in (" + sqlSub + ")"
                 ;
 
@@ -110,11 +120,20 @@ public class DmDocumentIndexedDao extends BaseDmEngineDaoImpl<DmDocumentIndexed>
     }
 
     public void setReindexByDocument(String documentId) {
+        SessionFactoryImpl sessionFactImpl = (SessionFactoryImpl) getSession().getSessionFactory();
+        
         String queryStr = "update"
                 + " dm_document_indexed"
                 + " set"
-                + " ddi_is_need_reindex = 1"
-                + " WHERE"
+                ;
+        if (sessionFactImpl.getDialect() instanceof org.hibernate.dialect.PostgreSQLDialect) {
+            queryStr = queryStr + " ddi_is_need_reindex = TRUE";
+        }
+        else {
+            queryStr = queryStr + " ddi_is_need_reindex = 1";
+        }
+
+        queryStr = queryStr + " WHERE"
                 + " dd_id = :documentId"
                 ;
 

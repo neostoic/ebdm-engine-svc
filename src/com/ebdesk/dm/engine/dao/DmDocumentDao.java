@@ -9,6 +9,7 @@ import com.ebdesk.dm.engine.domain.DmDocument;
 import java.util.Date;
 import java.util.List;
 import org.hibernate.Query;
+import org.hibernate.impl.SessionFactoryImpl;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -57,13 +58,20 @@ public class DmDocumentDao extends BaseDmEngineDaoImpl<DmDocument> {
     }
 
     public void setIsRemovedByFolder(String folderId) {
+        SessionFactoryImpl sessionFactImpl = (SessionFactoryImpl) getSession().getSessionFactory();
         String sqlSub = "SELECT"
             + " df.dd_id"
             + " from dm_document_folder df"
             + " where df.df_id = :folderId"
             ;
-        
-        Query query = getSession().createSQLQuery("UPDATE dm_document SET dd_is_removed = 1 WHERE dd_id in (" + sqlSub + ")");
+
+        Query query;
+        if (sessionFactImpl.getDialect() instanceof org.hibernate.dialect.PostgreSQLDialect) {
+            query = getSession().createSQLQuery("UPDATE dm_document SET dd_is_removed = TRUE WHERE dd_id in (" + sqlSub + ")");
+        }
+        else {
+            query = getSession().createSQLQuery("UPDATE dm_document SET dd_is_removed = 1 WHERE dd_id in (" + sqlSub + ")");
+        }
         query.setString("folderId", folderId);
         query.executeUpdate();
     }
