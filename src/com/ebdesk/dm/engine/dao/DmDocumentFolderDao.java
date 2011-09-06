@@ -115,7 +115,7 @@ public class DmDocumentFolderDao extends BaseDmEngineDaoImpl<DmDocumentFolder> {
                 .append("LEFT JOIN d.approval AS a ")
                 .append("LEFT JOIN df.folder AS f ")                
                 .append("WHERE f.id = :folderId AND d.isRemoved = :isRemoved AND  ")
-                .append("(((f.isNeedApproval = false ) AND (a.status != 3 OR d.approved = :approved)) OR "
+                .append("(((f.isNeedApproval = false ) AND (d.approved = :approved OR d.createdBy.id = :accountId OR (a.status = :status AND 1 = :permission))) OR "
                 + "( (f.isNeedApproval = true) AND ((d.approved = :approved) "
                 + "OR (d.createdBy.id = :accountId) OR (a.status = :status AND 1 = :permission) ))) ");
         
@@ -207,7 +207,7 @@ public class DmDocumentFolderDao extends BaseDmEngineDaoImpl<DmDocumentFolder> {
                 .append("LEFT JOIN d.approval AS a ")
                 .append("LEFT JOIN df.folder AS f ")                
                 .append("WHERE f.id = :folderId AND d.isRemoved = :isRemoved AND  ")
-                .append("((f.isNeedApproval = false AND (a.status != 3 OR d.approved = :approved)) OR "
+                .append("((f.isNeedApproval = false AND (d.approved = :approved OR d.createdBy.id = :accountId OR (a.status = :status AND 1 = :permission))) OR "
                 + "( (f.isNeedApproval = true) AND ((d.approved = :approved) "
                 + "OR (d.createdBy.id = :accountId) OR (a.status = :status AND 1 = :permission) ))) ");
         
