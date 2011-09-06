@@ -458,7 +458,7 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         document.setApproval(documentApprovalDao.findByDocId(documentId));
         
         if (isCanDelete(accountId, folderId) || 
-                (folder.getIsNeedApproval() && !document.getApproved() 
+                (!document.getApproved() 
                 && (document.getApproval().getStatus() == 1 || document.getApproval().getStatus() == 3) && 
                 document.getCreatedBy().getId().equals(accountId))) {
             document.setIsRemoved(Boolean.TRUE);
