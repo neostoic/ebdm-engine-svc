@@ -179,6 +179,24 @@ public class DmFolderDao extends BaseDmEngineDaoImpl<DmFolder> {
         return folderList;
     }
 
+    public List<DmFolder> getFirstLevelList() {
+        List<DmFolder> folderList = null;
+        Criteria crit = getSession().createCriteria(DmFolder.class);
+        crit.add(Restrictions.isNull("parent"));
+        crit.addOrder(Order.asc("name"));
+        folderList = crit.list();
+
+        // start - get children for each child (trigger lazy fetch)
+        for (DmFolder folderTmp : folderList) {
+            if (folderTmp.getChildList() != null) {
+                folderTmp.getChildList().size();
+            }
+        }
+        // end - get children for each child (trigger lazy fetch)
+
+        return folderList;
+    }
+
     public List<DmAccount> getListOwnerByPermittedAccount(String accountId, Integer permissionLevelStart) {
         DmAccount permittedAccount = null;
         if (accountId != null) {

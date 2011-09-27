@@ -33,6 +33,7 @@ public interface DmFolderService {
     public void updatePermission(String folderId, String manageAccList, String writeAccList, String consumeAccList, String viewAccList);
 
     public List<DmFolder> getFirstLevelList(String accountId);
+    public List<DmFolder> getFirstLevelList();
 
     public List<String> getListShareOwnerIdByAccount(String accountId);
     public List<DmFolder> getSharedFirstLevelList(String accountSharedId, String accountOwnerId);
@@ -57,4 +58,5 @@ public interface DmFolderService {
     public List<DmFolderRelated> getFolderRelatedList(String folderId, String accountId);
     public void deleteRelated(String folderId, String relatedFolderIdDelListStr);
 
+    public boolean move(String folderId, String folderDestId, String accountDestId, String accountOperatorId);
 }

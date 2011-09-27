@@ -60,4 +60,5 @@ public interface BaseDmEngineDao<T> {
      */
     public Integer countAll();
 
+    //public void flush();
 }

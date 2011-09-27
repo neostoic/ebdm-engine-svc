@@ -110,4 +110,7 @@ public class BaseDmEngineDaoImpl<T> implements BaseDmEngineDao<T> {
         return 0;
     }
 
+    public void flush() {
+        sessionFactory.getCurrentSession().flush();
+    }
 }

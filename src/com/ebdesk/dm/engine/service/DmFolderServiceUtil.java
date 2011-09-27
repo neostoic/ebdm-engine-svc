@@ -98,6 +98,10 @@ public class DmFolderServiceUtil {
         return getFolderService().getFirstLevelList(accountId);
     }
 
+    public static List<DmFolder> getFirstLevelList() {
+        return getFolderService().getFirstLevelList();
+    }    
+
     public static List<String> getListShareOwnerIdByAccount(String accountId) {
         return getFolderService().getListShareOwnerIdByAccount(accountId);
     }
@@ -164,5 +168,9 @@ public class DmFolderServiceUtil {
 
     public static void deleteRelatedByFolderRelated(String folderId) {
         getFolderService().deleteRelatedByFolderRelated(folderId);
+    }
+
+    public static boolean move(String folderId, String folderDestId, String accountDestId, String accountOperatorId) {
+        return getFolderService().move(folderId, folderDestId, accountDestId, accountOperatorId);
     }
 }

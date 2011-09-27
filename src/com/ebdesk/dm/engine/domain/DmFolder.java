@@ -34,6 +34,8 @@ public class DmFolder implements Serializable {
     private String description;
     @Column(name = "df_is_need_approval")
     private Boolean isNeedApproval;
+    @Column(name = "df_level")
+    private Integer level;
 
     @JoinColumn(name = "df_parent_id", referencedColumnName = "df_id", nullable = true)
     @ManyToOne(targetEntity = DmFolder.class)
@@ -59,6 +61,9 @@ public class DmFolder implements Serializable {
 
     @OneToMany(targetEntity=DmFolderPermission.class, mappedBy = "folder", fetch=FetchType.LAZY)
     private List<DmFolderPermission> permissionList;
+
+    @OneToMany(targetEntity=DmFolderDescendant.class, mappedBy = "folder", fetch=FetchType.LAZY)
+    private List<DmFolderDescendant> descendantList;
 
     public DmFolder() {
     }
@@ -141,5 +146,21 @@ public class DmFolder implements Serializable {
 
     public void setCreatedBy(DmAccount createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public Integer getLevel() {
+        return level;
+    }
+
+    public void setLevel(Integer level) {
+        this.level = level;
+    }
+
+    public List<DmFolderDescendant> getDescendantList() {
+        return descendantList;
+    }
+
+    public void setDescendantList(List<DmFolderDescendant> descendantList) {
+        this.descendantList = descendantList;
     }
 }

@@ -10,10 +10,12 @@ import com.ebdesk.dm.engine.dao.DmAccountDao;
 import com.ebdesk.dm.engine.dao.DmDocumentDao;
 import com.ebdesk.dm.engine.dao.DmDocumentFolderDao;
 import com.ebdesk.dm.engine.dao.DmFolderDao;
+import com.ebdesk.dm.engine.dao.DmFolderDescendantDao;
 import com.ebdesk.dm.engine.dao.DmFolderPermissionDao;
 import com.ebdesk.dm.engine.dao.DmFolderRelatedDao;
 import com.ebdesk.dm.engine.domain.DmAccount;
 import com.ebdesk.dm.engine.domain.DmFolder;
+import com.ebdesk.dm.engine.domain.DmFolderDescendant;
 import com.ebdesk.dm.engine.domain.DmFolderPermission;
 import com.ebdesk.dm.engine.domain.DmFolderRelated;
 import com.ebdesk.dm.engine.dto.DmFolderNode;
@@ -45,6 +47,8 @@ public class DmFolderServiceImpl implements DmFolderService {
     private DmDocumentFolderDao docFolderDao;
     @Autowired
     private DmDocumentDao docDao;
+    @Autowired
+    private DmFolderDescendantDao folderDescendantDao;
 
     public boolean save(DmFolder folder) {
         if(folder.getId() == null)
@@ -78,6 +82,7 @@ public class DmFolderServiceImpl implements DmFolderService {
         if (folder == null) {
             return false;
         }
+        folderDescendantDao.deleteByDescendant(folder.getId());
         docDao.setIsRemovedByFolder(folder.getId());
         docFolderDao.deleteByFolderId(folder.getId());
         folderDao.delete(folder);
@@ -352,6 +357,18 @@ public class DmFolderServiceImpl implements DmFolderService {
             // end - get parent permission
 
             // start - create folder
+            // // start - get parent
+            DmFolder folderParent = null;
+            if (folder.getParent() != null) {
+                folderParent = folderDao.findById(folder.getParent().getId());
+            }
+            // // end - get parent
+            if (folderParent != null) {
+                folder.setLevel(folderParent.getLevel().intValue() + 1);
+            }
+            else {
+                folder.setLevel(1);
+            }
             boolean isFolderSaved = save(folder);
             // end - create folder
 
@@ -379,6 +396,30 @@ public class DmFolderServiceImpl implements DmFolderService {
                     folderPermissionDao.save(folderPermission);
                 }
                 // end - copy parent permissions
+
+                // start - insert folder descendants                
+                if (folderParent != null) {
+                    // // start - for parent
+                    DmFolderDescendant folderDescendant = new DmFolderDescendant();
+                    folderDescendant.setId(java.util.UUID.randomUUID().toString());
+                    folderDescendant.setFolder(folderParent);
+                    folderDescendant.setFolderDescendant(folder);
+                    folderDescendantDao.save(folderDescendant);
+                    // // end - for parent
+                    // // start - for grandparent and other ascendants
+                    List<DmFolder> ascendantList = folderDescendantDao.getAscendantList(folderParent.getId());
+                    if (ascendantList != null) {
+                        for (DmFolder ascendant : ascendantList) {
+                            DmFolderDescendant folderDescendantTmp = new DmFolderDescendant();
+                            folderDescendantTmp.setId(java.util.UUID.randomUUID().toString());
+                            folderDescendantTmp.setFolder(ascendant);
+                            folderDescendantTmp.setFolderDescendant(folder);
+                            folderDescendantDao.save(folderDescendantTmp);
+                        }
+                    }
+                    // // end - for grandparent and other ascendants
+                }                
+                // end - insert folder descendants
             }
         }        
 
@@ -387,6 +428,10 @@ public class DmFolderServiceImpl implements DmFolderService {
 
     public List<DmFolder> getFirstLevelList(String accountId) {
         return folderDao.getFirstLevelList(accountId);
+    }
+
+    public List<DmFolder> getFirstLevelList() {
+        return folderDao.getFirstLevelList();
     }
 
     public List<String> getListShareOwnerIdByAccount(String accountId) {
@@ -659,5 +704,145 @@ public class DmFolderServiceImpl implements DmFolderService {
 
     public void deleteRelatedByFolderRelated(String folderId) {
         folderRelatedDao.deleteByFolderRelated(folderId);
+    }
+
+    public boolean move(String folderId, String folderDestId, String accountDestId, String accountOperatorId) {
+        // start - move folder
+        DmFolder folderDest = folderDao.findById(folderDestId);
+        DmAccount accountOperator = accountDao.get(accountOperatorId);
+        if (accountOperator == null) {
+            return false;
+        }
+        DmFolder folder = folderDao.findById(folderId);
+        if (folder == null) {
+            return false;
+        }
+        DmAccount accountDestination = accountDao.get(accountDestId);
+
+        if (folderDest != null) {
+            folder.setLevel(folderDest.getLevel().intValue() + 1);
+            folder.setOwner(folderDest.getOwner());
+        }
+        else {
+            folder.setLevel(1);
+            if (accountDestination != null) {
+                folder.setOwner(accountDestination);
+            }
+        }
+        folder.setModifiedBy(accountOperator);
+        folder.setParent(folderDest);
+        // end - move folder
+
+        // start - modify folder descendants: for folder and its descendants
+        // // start - folder's current ascendants
+        List<String> folderCurrentAscendantIdList = folderDescendantDao.getAscendantIdList(folderId);
+        // // end - folder's current ascendants
+        // // start - folder's new ascendants
+        List<String> folderNewAscendantIdList = null;
+        if (folderDest != null) {
+            folderNewAscendantIdList = folderDescendantDao.getAscendantIdList(folderDest.getId());
+            if (folderNewAscendantIdList == null) {
+                folderNewAscendantIdList = new ArrayList<String>();
+            }
+            folderNewAscendantIdList.add(folderDest.getId());
+        }
+        // // end - folder's new ascendants
+
+        // // test: start -
+//        if (folderCurrentAscendantIdList != null) {
+//            for (String folderCurrentAscendantId : folderCurrentAscendantIdList) {
+//                System.out.println("folderCurrentAscendantId: " + folderCurrentAscendantId);
+//            }
+//        }
+//        if (folderNewAscendantIdList != null) {
+//            for (String folderNewAscendantId : folderNewAscendantIdList) {
+//                System.out.println("folderNewAscendantId: " + folderNewAscendantId);
+//            }
+//        }
+        // // test: end -
+
+        // // start - ascendants that should be removed
+        List<String> ascendantIdToRemoveList = new ArrayList<String>();
+        if (folderCurrentAscendantIdList != null) {
+            for (String folderCurrentAscendantId : folderCurrentAscendantIdList) {
+                if (folderNewAscendantIdList == null) {
+                    ascendantIdToRemoveList.add(folderCurrentAscendantId);
+                }
+                else {
+                    if (folderNewAscendantIdList.indexOf(folderCurrentAscendantId) == -1) {
+                        ascendantIdToRemoveList.add(folderCurrentAscendantId);
+                    }
+                }
+            }
+        }
+        // // end - ascendants records that should be removed
+        // // start - ascendants records that should be added
+        List<String> ascendantIdToAddList = new ArrayList<String>();
+        if (folderNewAscendantIdList != null) {
+            for (String folderNewAscendantId : folderNewAscendantIdList) {
+                if (folderCurrentAscendantIdList == null) {
+                    ascendantIdToAddList.add(folderNewAscendantId);
+                }
+                else {
+                    if (folderCurrentAscendantIdList.indexOf(folderNewAscendantId) == -1) {
+                        ascendantIdToAddList.add(folderNewAscendantId);
+                    }
+                }
+            }
+        }
+        // // end - ascendants records that should be added
+
+        // // test: start -
+//        if (ascendantIdToRemoveList != null) {
+//            for (String ascendantIdToRemove : ascendantIdToRemoveList) {
+//                System.out.println("ascendantIdToRemove: " + ascendantIdToRemove);
+//            }
+//        }
+//        if (ascendantIdToAddList != null) {
+//            for (String ascendantIdToAdd : ascendantIdToAddList) {
+//                System.out.println("ascendantIdToAdd: " + ascendantIdToAdd);
+//            }
+//        }
+        // // test: end -
+
+        // // start - list containing folder id and descendants' folder id
+        List<String> folderAndDescendantFolderIdToUpdateList = folderDescendantDao.getDescendantIdList(folderId);
+        if (folderAndDescendantFolderIdToUpdateList == null) {
+            folderAndDescendantFolderIdToUpdateList = new ArrayList<String>();
+        }
+        folderAndDescendantFolderIdToUpdateList.add(folder.getId());
+        // // end - list containing folder id and descendants' folder id
+        // // start - delete folder descendant records
+        folderDescendantDao.deleteByFoldersByDescendants(folderAndDescendantFolderIdToUpdateList, ascendantIdToRemoveList);
+        // // end - delete folder descendant records
+
+        // // start - insert folder descendant records
+        if (folderAndDescendantFolderIdToUpdateList != null) {
+            for (String folderAndDescendantFolderIdToUpdate : folderAndDescendantFolderIdToUpdateList) {
+                if (ascendantIdToAddList != null) {
+                    for (String ascendantIdToAdd : ascendantIdToAddList) {
+                        DmFolder folderTmp = new DmFolder();
+                        folderTmp.setId(ascendantIdToAdd);
+
+                        DmFolder folderDescTmp = new DmFolder();
+                        folderDescTmp.setId(folderAndDescendantFolderIdToUpdate);
+
+                        DmFolderDescendant folderDescendantTmp = new DmFolderDescendant();
+                        folderDescendantTmp.setId(java.util.UUID.randomUUID().toString());
+                        folderDescendantTmp.setFolder(folderTmp);
+                        folderDescendantTmp.setFolderDescendant(folderDescTmp);
+                        folderDescendantDao.save(folderDescendantTmp);
+                    }
+                }
+            }
+        }
+        // // end - insert folder descendant records
+        // end - modify folder descendants: for folder and its descendants
+
+        // start - handle reindexing of documents
+        // TODO
+        // end - handle reindexing of documents
+
+        return true;
     }
 }
