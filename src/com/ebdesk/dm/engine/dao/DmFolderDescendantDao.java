@@ -71,6 +71,14 @@ public class DmFolderDescendantDao extends BaseDmEngineDaoImpl<DmFolderDescendan
 //        return null;
     }
 
+    public List<DmFolder> getDescendantList(String folderId) {
+        Criteria crit = getSession().createCriteria(DmFolderDescendant.class);
+        crit.add(Restrictions.eq("folder.id", (folderId != null) ? folderId : ""));
+        crit.setProjection(Projections.property("folderDescendant"));
+
+        return crit.list();
+    }
+
     public List<String> getAscendantIdList(String folderId) {
         Criteria crit = getSession().createCriteria(DmFolderDescendant.class);
         crit.add(Restrictions.eq("folderDescendant.id", (folderId != null) ? folderId : ""));

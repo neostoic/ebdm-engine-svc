@@ -6,8 +6,10 @@
 package com.ebdesk.dm.engine.service.impl;
 
 import com.ebdesk.dm.engine.dao.DmFolderDescendantDao;
+import com.ebdesk.dm.engine.domain.DmFolder;
 import com.ebdesk.dm.engine.domain.DmFolderDescendant;
 import com.ebdesk.dm.engine.service.DmFolderDescendantService;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -30,5 +32,13 @@ public class DmFolderDescendantServiceImpl implements DmFolderDescendantService 
 
     public void save(DmFolderDescendant folderDescendant) {
         folderDescendantDao.save(folderDescendant);
+    }
+
+    public List<DmFolder> getDescendantList(String folderId) {
+        return folderDescendantDao.getDescendantList(folderId);
+    }
+    
+    public List<DmFolder> getAscendantOrderedList(String folderId) {
+        return folderDescendantDao.getAscendantOrderedList(folderId);
     }
 }

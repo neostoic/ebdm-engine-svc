@@ -173,4 +173,8 @@ public class DmFolderServiceUtil {
     public static boolean move(String folderId, String folderDestId, String accountDestId, String accountOperatorId) {
         return getFolderService().move(folderId, folderDestId, accountDestId, accountOperatorId);
     }
+
+    public static List<DmFolder> getAscendantOrderedList(String folderId) {
+        return getFolderService().getAscendantOrderedList(folderId);
+    }
 }

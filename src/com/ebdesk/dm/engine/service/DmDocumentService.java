@@ -218,5 +218,5 @@ public interface DmDocumentService {
     
     public boolean isCanDownload(String accountId, String folderId);
 
-    public boolean moveDocument(String documentId, String folderIdDest);
+    public boolean moveDocument(String documentId, String folderIdDest, String accountIdOperator);
 }

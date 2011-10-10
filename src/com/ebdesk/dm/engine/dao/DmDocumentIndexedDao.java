@@ -45,7 +45,7 @@ public class DmDocumentIndexedDao extends BaseDmEngineDaoImpl<DmDocumentIndexed>
 //            crit.add(Restrictions.ge("lastModifiedTime", docModificationTime));
 //        }
         crit.add(disjunction);
-        crit.add(Restrictions.eq("approved", true));
+//        crit.add(Restrictions.eq("approved", true));
         crit.addOrder(Order.desc("docIndexed.isNeedReindex"));
         crit.addOrder(Order.asc("lastModifiedTime"));
         crit.setMaxResults(numDocs);
@@ -119,6 +119,63 @@ public class DmDocumentIndexedDao extends BaseDmEngineDaoImpl<DmDocumentIndexed>
         query.executeUpdate();
     }
 
+    public void setReindexByFolderList(List<String> folderIdList) {
+        if ((folderIdList == null) || (folderIdList.size() == 0)) {
+            return;
+        }
+
+        SessionFactoryImpl sessionFactImpl = (SessionFactoryImpl) getSession().getSessionFactory();
+
+        String sqlSub = "SELECT"
+            + " df.dd_id"
+            + " from dm_document_folder df"
+            + " inner join dm_folder f"
+            + " on df.df_id = f.df_id"
+            + " where";
+
+//        sqlSub = sqlSub + " and (";
+        int i = 0;
+        for (String folderId : folderIdList) {
+            if (i > 0) {
+                sqlSub = sqlSub + " or";
+            }
+            sqlSub = sqlSub + " (f.df_id = :folderId" + i + ")";
+            i++;
+        }
+//        sqlSub = sqlSub + ")";
+
+//        Query query = getSession().createSQLQuery(updateQuery);
+
+//            + " f.df_id = :folderId"
+
+        String queryStr = "update"
+                + " dm_document_indexed"
+                + " set"
+                ;
+        if (sessionFactImpl.getDialect() instanceof org.hibernate.dialect.PostgreSQLDialect) {
+            queryStr = queryStr + " ddi_is_need_reindex = TRUE";
+        }
+        else {
+            queryStr = queryStr + " ddi_is_need_reindex = 1";
+        }
+
+        queryStr = queryStr + " WHERE"
+                + " dd_id in (" + sqlSub + ")"
+                ;
+
+        Query query = getSession().createSQLQuery(queryStr);
+
+        i = 0;
+        for (String folderId : folderIdList) {
+            query.setString("folderId" + i, folderId);
+            i++;
+        }        
+
+//        query.setString("folderId", folderId);
+
+        query.executeUpdate();
+    }
+    
     public void setReindexByDocument(String documentId) {
         SessionFactoryImpl sessionFactImpl = (SessionFactoryImpl) getSession().getSessionFactory();
         

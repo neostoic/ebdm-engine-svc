@@ -139,4 +139,39 @@ public class DmFolderPermissionDao extends BaseDmEngineDaoImpl<DmFolderPermissio
         }
         return 0;
     }
+
+    public void deleteByFolderList(List<String> folderIdList) {
+        if ((folderIdList == null) || (folderIdList.size() == 0)) {
+            return;
+        }
+
+        String deleteQuery = "delete from"
+                + " dm_folder_permission"
+                + " where"
+                + " (1 = 1)"
+                ;
+
+        deleteQuery = deleteQuery + " and (";
+        int i = 0;
+        for (String folderId : folderIdList) {
+            if (i > 0) {
+                deleteQuery = deleteQuery + " or";
+            }
+            deleteQuery = deleteQuery + " (df_id = :folderId" + i + ")";
+            i++;
+        }
+        deleteQuery = deleteQuery + ")";
+
+        Query query = getSession().createSQLQuery(deleteQuery);
+
+        i = 0;
+        for (String folderId : folderIdList) {
+            query.setString("folderId" + i, folderId);
+            i++;
+        }
+
+        query.executeUpdate();
+
+        flush();
+    }
 }

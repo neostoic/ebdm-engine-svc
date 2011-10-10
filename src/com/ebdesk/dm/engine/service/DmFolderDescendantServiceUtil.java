@@ -5,7 +5,9 @@
 
 package com.ebdesk.dm.engine.service;
 
+import com.ebdesk.dm.engine.domain.DmFolder;
 import com.ebdesk.dm.engine.domain.DmFolderDescendant;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -36,5 +38,13 @@ public class DmFolderDescendantServiceUtil {
 
     public static void save(DmFolderDescendant folderDescendant) {
         getFolderDescendantService().save(folderDescendant);
+    }
+
+    public static List<DmFolder> getDescendantList(String folderId) {
+        return getFolderDescendantService().getDescendantList(folderId);
+    }
+
+    public static List<DmFolder> getAscendantOrderedList(String folderId) {
+        return getFolderDescendantService().getAscendantOrderedList(folderId);
     }
 }

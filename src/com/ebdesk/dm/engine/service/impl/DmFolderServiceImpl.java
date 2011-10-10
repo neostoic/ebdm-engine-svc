@@ -9,6 +9,7 @@ import com.ebdesk.dm.engine.constant.ApplicationConstants;
 import com.ebdesk.dm.engine.dao.DmAccountDao;
 import com.ebdesk.dm.engine.dao.DmDocumentDao;
 import com.ebdesk.dm.engine.dao.DmDocumentFolderDao;
+import com.ebdesk.dm.engine.dao.DmDocumentIndexedDao;
 import com.ebdesk.dm.engine.dao.DmFolderDao;
 import com.ebdesk.dm.engine.dao.DmFolderDescendantDao;
 import com.ebdesk.dm.engine.dao.DmFolderPermissionDao;
@@ -49,6 +50,8 @@ public class DmFolderServiceImpl implements DmFolderService {
     private DmDocumentDao docDao;
     @Autowired
     private DmFolderDescendantDao folderDescendantDao;
+    @Autowired
+    private DmDocumentIndexedDao documentIndexedDao;
 
     public boolean save(DmFolder folder) {
         if(folder.getId() == null)
@@ -719,6 +722,8 @@ public class DmFolderServiceImpl implements DmFolderService {
         }
         DmAccount accountDestination = accountDao.get(accountDestId);
 
+        String folderOwnerIdOrig = folder.getOwner().getId();
+
         if (folderDest != null) {
             folder.setLevel(folderDest.getLevel().intValue() + 1);
             folder.setOwner(folderDest.getOwner());
@@ -732,6 +737,58 @@ public class DmFolderServiceImpl implements DmFolderService {
         folder.setModifiedBy(accountOperator);
         folder.setParent(folderDest);
         // end - move folder
+
+        // start - check if owner changes
+        boolean isChangeOwner = false;
+        String folderOwnerIdNew = null;
+        if (folderDest != null) {
+            if (!folderOwnerIdOrig.equals(folderDest.getOwner().getId())) {
+                isChangeOwner = true;
+                folderOwnerIdNew = folderDest.getOwner().getId();
+            }
+        }
+        else {
+            if (accountDestination != null) {
+                if (!folderOwnerIdOrig.equals(accountDestination.getId())) {
+                    isChangeOwner = true;
+                    folderOwnerIdNew = accountDestination.getId();
+                }
+            }
+        }
+        // end - check if owner changes
+
+        // start - delete related folders if owner changes
+        if (isChangeOwner) {
+            folderRelatedDao.deleteByFolder(folderId);
+        }
+        // end - delete related folders if owner changes
+
+        // start - list containing descendants' folder id
+        List<String> descendantFolderIdList = folderDescendantDao.getDescendantIdList(folderId);
+        // end - list containing descendants' folder id
+
+        // start - update owner property of descendant folders
+        if ((descendantFolderIdList != null) && (descendantFolderIdList.size() > 0)) {
+            if (folderDest != null) {
+                if (isChangeOwner) {
+                    folderDao.updateOwnerByFolderIdList(descendantFolderIdList, folderDest.getOwner().getId());
+                }
+            }
+            else {
+                if ((isChangeOwner) && (accountDestination != null)) {
+                    folderDao.updateOwnerByFolderIdList(descendantFolderIdList, accountDestination.getId());
+                }
+            }
+        }
+        // end - update owner property of descendant folders
+
+        // start - list containing folder id and descendants' folder id
+        List<String> folderAndDescendantFolderIdToUpdateList = descendantFolderIdList;
+        if (folderAndDescendantFolderIdToUpdateList == null) {
+            folderAndDescendantFolderIdToUpdateList = new ArrayList<String>();
+        }
+        folderAndDescendantFolderIdToUpdateList.add(folder.getId());
+        // end - list containing folder id and descendants' folder id
 
         // start - modify folder descendants: for folder and its descendants
         // // start - folder's current ascendants
@@ -804,14 +861,7 @@ public class DmFolderServiceImpl implements DmFolderService {
 //            }
 //        }
         // // test: end -
-
-        // // start - list containing folder id and descendants' folder id
-        List<String> folderAndDescendantFolderIdToUpdateList = folderDescendantDao.getDescendantIdList(folderId);
-        if (folderAndDescendantFolderIdToUpdateList == null) {
-            folderAndDescendantFolderIdToUpdateList = new ArrayList<String>();
-        }
-        folderAndDescendantFolderIdToUpdateList.add(folder.getId());
-        // // end - list containing folder id and descendants' folder id
+        
         // // start - delete folder descendant records
         folderDescendantDao.deleteByFoldersByDescendants(folderAndDescendantFolderIdToUpdateList, ascendantIdToRemoveList);
         // // end - delete folder descendant records
@@ -839,10 +889,45 @@ public class DmFolderServiceImpl implements DmFolderService {
         // // end - insert folder descendant records
         // end - modify folder descendants: for folder and its descendants
 
+        // start - modify folder permission if owner changes
+        if (isChangeOwner) {
+            folderPermissionDao.deleteByFolderList(folderAndDescendantFolderIdToUpdateList);
+            if (folderAndDescendantFolderIdToUpdateList != null) {
+                DmAccount accountTmp = new DmAccount();
+                accountTmp.setId(folderOwnerIdNew);
+                for (String folderAndDescendantFolderIdToUpdate : folderAndDescendantFolderIdToUpdateList) {
+                    DmFolder folderTmp = new DmFolder();
+                    folderTmp.setId(folderAndDescendantFolderIdToUpdate);
+
+                    DmFolderPermission folderPermission = new DmFolderPermission();
+                    folderPermission.setId(java.util.UUID.randomUUID().toString());
+                    folderPermission.setPermissionType(ApplicationConstants.FOLDER_PERMISSION_MANAGER);
+                    folderPermission.setAccount(accountTmp);
+                    folderPermission.setFolder(folderTmp);
+                    folderPermissionDao.save(folderPermission);
+                }
+            }
+        }
+        // end - modify folder permission if owner changes
+
         // start - handle reindexing of documents
-        // TODO
+        // TODO later: when indexing of document includes ascendant folders information,
+        // reindex even when owner is the same account
+        if (isChangeOwner) {
+            System.out.println("set reindex by folder list");
+            if (folderAndDescendantFolderIdToUpdateList != null) {
+                for (String folderAndDescendantFolderIdToUpdate : folderAndDescendantFolderIdToUpdateList) {
+                    System.out.println("folder id: " + folderAndDescendantFolderIdToUpdate);
+                }
+            }
+            documentIndexedDao.setReindexByFolderList(folderAndDescendantFolderIdToUpdateList);
+        }
         // end - handle reindexing of documents
 
         return true;
+    }
+
+    public List<DmFolder> getAscendantOrderedList(String folderId) {
+        return folderDescendantDao.getAscendantOrderedList(folderId);
     }
 }

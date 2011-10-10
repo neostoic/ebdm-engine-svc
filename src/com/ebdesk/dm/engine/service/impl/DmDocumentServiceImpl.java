@@ -692,7 +692,7 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         document.setLastModifiedTime(now);
         document.setIsRemoved(Boolean.FALSE);
         document.setContentType(contentType);
-        document.setApproved((folder.getIsNeedApproval() && isOwner) || (!folder.getIsNeedApproval()));
+        document.setApproved((folder.getIsNeedApproval().booleanValue() && isOwner) || (!folder.getIsNeedApproval().booleanValue()));
         documentDao.save(document);
         
 
@@ -1542,13 +1542,57 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         return false;
     }
 
-    public boolean moveDocument(String documentId, String folderIdDest) {
+//    public boolean moveDocument(String documentId, String folderIdDest, String accountIdOprSource, String accountIdOprDest) {
+    public boolean moveDocument(String documentId, String folderIdDest, String accountIdOprDest) {
+        DmAccount accountOperatorDest = accountDao.get(accountIdOprDest);
+        if (accountOperatorDest == null) {
+            return false;
+        }
+
+//        DmAccount accountOperatorSource = accountDao.get(accountIdOprSource);
+//        if (accountOperatorSource == null) {
+//            return false;
+//        }
+
+        if (!isWriter(accountIdOprDest, folderIdDest)) {
+            return false;
+        }
+
         DmDocumentFolder docFolder = documentFolderDao.getByDocument(documentId);
         if (docFolder != null) {
             DmFolder folder = folderDao.findById(folderIdDest);
             if (folder != null) {
+//                if (!isOwner(accountIdOprSource, docFolder.getFolder().getId())) {
+//                    return false;
+//                }
                 docFolder.setFolder(folder);
                 documentFolderDao.update(docFolder);
+
+                if (folder.getIsNeedApproval().booleanValue() && !isOwner(accountIdOprDest, folderIdDest)) {
+                    DmDocument document = documentDao.findById(documentId);
+
+                    if (document != null) {
+                        document.setApproved(Boolean.FALSE);
+                        documentDao.update(document);
+
+                        DmDocumentApproval docApproval = documentApprovalDao.findByDocId(documentId);
+                        if (docApproval != null) {
+                            docApproval.setApprovedBy(null);
+                            docApproval.setComment(null);
+                            docApproval.setStatus(ApplicationConstants.APPROVAL_STATUS_REQUESTED);
+                            documentApprovalDao.update(docApproval);
+                        }
+                        else {
+                            docApproval = new DmDocumentApproval();
+                            docApproval.setApprovedBy(null);
+                            docApproval.setComment(null);
+                            docApproval.setDocument(document);
+                            docApproval.setId(UUID.randomUUID().toString());
+                            docApproval.setStatus(ApplicationConstants.APPROVAL_STATUS_REQUESTED);
+                            documentApprovalDao.save(docApproval);
+                        }
+                    }                    
+                }
 
                 // start - set document to be reindexed
                 documentIndexedDao.setReindexByDocument(documentId);

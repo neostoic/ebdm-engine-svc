@@ -278,7 +278,7 @@ public class DmDocumentServiceUtil {
         return getDocumentService().isCanDownload(accountId, folderId);
     }
 
-    public static boolean moveDocument(String documentId, String folderIdDest) {
-        return getDocumentService().moveDocument(documentId, folderIdDest);
+    public static boolean moveDocument(String documentId, String folderIdDest, String accountIdOperator) {
+        return getDocumentService().moveDocument(documentId, folderIdDest, accountIdOperator);
     }
 }

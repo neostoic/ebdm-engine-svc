@@ -59,4 +59,6 @@ public interface DmFolderService {
     public void deleteRelated(String folderId, String relatedFolderIdDelListStr);
 
     public boolean move(String folderId, String folderDestId, String accountDestId, String accountOperatorId);
+
+    public List<DmFolder> getAscendantOrderedList(String folderId);
 }

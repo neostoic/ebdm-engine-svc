@@ -14,6 +14,7 @@ import com.ebdesk.dm.engine.dto.DmFolderNode;
 import java.util.List;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
+import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.CriteriaSpecification;
@@ -683,5 +684,45 @@ public class DmFolderDao extends BaseDmEngineDaoImpl<DmFolder> {
         crit.add(Restrictions.eq("permissions.account", account));
         
         return (DmFolder) crit.uniqueResult();
+    }
+
+    public void updateOwnerByFolderIdList(List<String> folderIdList, String ownerAccountId) {
+        if ((ownerAccountId == null) || (ownerAccountId.isEmpty())) {
+            return;
+        }
+
+        if ((folderIdList == null) || (folderIdList.size() == 0)) {
+            return;
+        }
+
+        String updateQuery = "update"
+                + " dm_folder"
+                + " set"
+                + " da_id_owner = :ownerAccountId"
+                + " where"
+                + " (1 = 1)"
+                ;
+
+        updateQuery = updateQuery + " and (";
+        int i = 0;
+        for (String folderId : folderIdList) {
+            if (i > 0) {
+                updateQuery = updateQuery + " or";
+            }
+            updateQuery = updateQuery + " (df_id = :folderId" + i + ")";
+            i++;
+        }
+        updateQuery = updateQuery + ")";
+
+        Query query = getSession().createSQLQuery(updateQuery);
+
+        query.setString("ownerAccountId", ownerAccountId);
+        i = 0;
+        for (String folderId : folderIdList) {
+            query.setString("folderId" + i, folderId);
+            i++;
+        }        
+
+        query.executeUpdate();
     }
 }
