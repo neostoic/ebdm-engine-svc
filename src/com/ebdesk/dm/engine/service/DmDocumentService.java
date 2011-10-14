@@ -12,9 +12,11 @@ import com.ebdesk.dm.engine.domain.DmDocument;
 import com.ebdesk.dm.engine.domain.DmDocumentComment;
 import com.ebdesk.dm.engine.domain.DmDocumentVersion;
 import com.ebdesk.dm.engine.dto.DocumentCompare;
-import com.ebdesk.dm.engine.dto.DocumentDownload;
+import com.ebdesk.dm.engine.dto.DocumentDownloadWithAccessLog;
 import com.ebdesk.dm.engine.dto.DocumentVersionDownload;
-import com.ebdesk.dm.engine.dto.DocumentView;
+import com.ebdesk.dm.engine.dto.DocumentVersionDownloadWithAccessLog;
+import com.ebdesk.dm.engine.dto.DocumentViewWithAccessLog;
+import com.ebdesk.dm.engine.dto.DocumentWithAccessLog;
 import java.util.List;
 import org.apache.commons.fileupload.FileItem;
 
@@ -66,7 +68,7 @@ public interface DmDocumentService {
      * @exception UserAccountNotFoundException if the user account doesn't exist.
      * @exception DocumentNotFoundException if the document doesn't exist or deleted.
      */
-    public DmDocument viewDocumentInformation(String documentId, String userId);
+    public DocumentWithAccessLog viewDocumentInformation(String documentId, String userId);
 
 
     /****
@@ -178,15 +180,15 @@ public interface DmDocumentService {
     
     public DmDocRenderImage findDocRenderImageById(String renderImageId);
     
-    public DocumentDownload downloadDocument(String documentId, String folderId, String accountId);
+    public DocumentDownloadWithAccessLog downloadDocument(String documentId, String folderId, String accountId);
     
-    public DocumentDownload viewDocument(String documentId, String folderId, String accountId);
+    public DocumentDownloadWithAccessLog viewDocument(String documentId, String folderId, String accountId);
 
-    public DocumentVersionDownload downloadDocumentVersion(String documentId, String versionId, String folderId, String accountId);
+    public DocumentVersionDownloadWithAccessLog downloadDocumentVersion(String documentId, String versionId, String folderId, String accountId);
 
-    public DocumentVersionDownload viewDocumentVersion(String documentId, String versionId, String folderId, String accountId);
+    public DocumentVersionDownloadWithAccessLog viewDocumentVersion(String documentId, String versionId, String folderId, String accountId);
  
-    public DocumentView viewDocumentPage(String documentId, String folderId, String accountId);
+    public DocumentViewWithAccessLog viewDocumentPage(String documentId, String folderId, String accountId);
     
     public DocumentCompare compareDocumentVersion(String firstVersionId, String secondVersionId);
     
@@ -219,4 +221,6 @@ public interface DmDocumentService {
     public boolean isCanDownload(String accountId, String folderId);
 
     public boolean moveDocument(String documentId, String folderIdDest, String accountIdOperator);
+
+    public List<String> getVersionIdList(String documentId);
 }

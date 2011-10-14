@@ -128,4 +128,11 @@ public class DmDocumentVersionDao extends BaseDmEngineDaoImpl<DmDocumentVersion>
         
         return null;
     }
+
+    public List<String> getIdListByDocId(String documentId) {
+        Criteria criteria = getSession().createCriteria(DmDocumentVersion.class);
+        criteria.add(Restrictions.eq("document.id", documentId));
+        criteria.setProjection(Projections.property("id"));
+        return criteria.list();
+    }
 }

@@ -50,8 +50,12 @@ import com.ebdesk.dm.engine.util.FileUtils;
 import com.ebdesk.dm.engine.domain.util.FolderPermission;
 import com.ebdesk.dm.engine.domain.util.PDFContent;
 import com.ebdesk.dm.engine.dto.DocumentCompare;
+import com.ebdesk.dm.engine.dto.DocumentDownloadWithAccessLog;
 import com.ebdesk.dm.engine.dto.DocumentVersionDownload;
+import com.ebdesk.dm.engine.dto.DocumentVersionDownloadWithAccessLog;
 import com.ebdesk.dm.engine.dto.DocumentView;
+import com.ebdesk.dm.engine.dto.DocumentViewWithAccessLog;
+import com.ebdesk.dm.engine.dto.DocumentWithAccessLog;
 import com.ebdesk.dm.engine.exception.DocumentNotFoundException;
 import com.ebdesk.dm.engine.exception.ExceedQuotaException;
 import com.ebdesk.dm.engine.exception.FolderNotFoundException;
@@ -260,7 +264,8 @@ public class DmDocumentServiceImpl implements DmDocumentService {
     }
 
     
-    public DmDocument viewDocumentInformation(String documentId, String accountId) {
+    public DocumentWithAccessLog viewDocumentInformation(String documentId, String accountId) {
+        DocumentWithAccessLog documentWithAccessLog = null;
         DmDocument document = this.findDocumentByDocId(documentId);
         if (document != null) {
             DmAccount account = accountDao.get(accountId);
@@ -272,17 +277,23 @@ public class DmDocumentServiceImpl implements DmDocumentService {
                 document.setApproval(documentApprovalDao.findByDocId(documentId));
             }
 
+            String accessLogId = UUID.randomUUID().toString();
+
             DmDocAccessHistory accessHistory = new DmDocAccessHistory();
-            accessHistory.setId(UUID.randomUUID().toString());
+            accessHistory.setId(accessLogId);
             accessHistory.setAccessedBy(account);
             accessHistory.setAccessedTime(new Date());
             accessHistory.setDocVersion(document.getLastVersion());
             accessHistory.setAccessType(DocumentAccessHistory.META_DATA_VIEW.getAccessType());
             docAccessHistoryDao.save(accessHistory);
+
+            documentWithAccessLog = new DocumentWithAccessLog();
+            documentWithAccessLog.setDocument(document);
+            documentWithAccessLog.setAccessLog(accessHistory);
         } else {
             throw new DocumentNotFoundException("Document doesn't exist.");
         }
-        return document;
+        return documentWithAccessLog;
     }
 
     /****
@@ -1128,7 +1139,8 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         return docRenderImageDao.findById(renderImageId);
     }
 
-    public DocumentDownload downloadDocument(String documentId, String folderId, String accountId) {
+    public DocumentDownloadWithAccessLog downloadDocument(String documentId, String folderId, String accountId) {
+        DocumentDownloadWithAccessLog documentDownloadWithAccessLog = null;
         DocumentDownload download = null;
         DmAccount account = accountDao.get(accountId);
         DmFolder folder = folderDao.findById(folderId);
@@ -1157,17 +1169,25 @@ public class DmDocumentServiceImpl implements DmDocumentService {
             throw new IllegalArgumentException(MessageCodeConstants.EBDM_ERROR_DOC_GENERAL_NOT_FOUND + " : " + "Document not found.");
         }
 
+        String accessLogId = UUID.randomUUID().toString();
+
         DmDocAccessHistory accessHistory = new DmDocAccessHistory();
-        accessHistory.setId(UUID.randomUUID().toString());
+        accessHistory.setId(accessLogId);
         accessHistory.setAccessedBy(account);
         accessHistory.setAccessedTime(new Date());
         accessHistory.setDocVersion(document.getLastVersion());
         accessHistory.setAccessType(DocumentAccessHistory.DOWNLOAD.getAccessType());
         docAccessHistoryDao.save(accessHistory);
-        return download;
+
+        documentDownloadWithAccessLog = new DocumentDownloadWithAccessLog();
+        documentDownloadWithAccessLog.setDocumentDownload(download);
+        documentDownloadWithAccessLog.setAccessLog(accessHistory);
+
+        return documentDownloadWithAccessLog;
     }
 
-    public DocumentDownload viewDocument(String documentId, String folderId, String accountId) {
+    public DocumentDownloadWithAccessLog viewDocument(String documentId, String folderId, String accountId) {
+        DocumentDownloadWithAccessLog documentDownloadWithAccessLog = null;
         DocumentDownload download = null;
         DmAccount account = accountDao.get(accountId);
         DmFolder folder = folderDao.findById(folderId);
@@ -1216,17 +1236,25 @@ public class DmDocumentServiceImpl implements DmDocumentService {
             throw new IllegalArgumentException(MessageCodeConstants.EBDM_ERROR_DOC_GENERAL_NOT_FOUND + " : " + "Document not found.");
         }
 
+        String accessLogId = UUID.randomUUID().toString();
+
         DmDocAccessHistory accessHistory = new DmDocAccessHistory();
-        accessHistory.setId(UUID.randomUUID().toString());
+        accessHistory.setId(accessLogId);
         accessHistory.setAccessedBy(account);
         accessHistory.setAccessedTime(new Date());
         accessHistory.setDocVersion(document.getLastVersion());
         accessHistory.setAccessType(DocumentAccessHistory.DOCUMENT_VIEW.getAccessType());
         docAccessHistoryDao.save(accessHistory);
-        return download;
+
+        documentDownloadWithAccessLog = new DocumentDownloadWithAccessLog();
+        documentDownloadWithAccessLog.setDocumentDownload(download);
+        documentDownloadWithAccessLog.setAccessLog(accessHistory);
+
+        return documentDownloadWithAccessLog;
     }
 
-    public DocumentView viewDocumentPage(String documentId, String folderId, String accountId) {
+    public DocumentViewWithAccessLog viewDocumentPage(String documentId, String folderId, String accountId) {
+        DocumentViewWithAccessLog documentViewWithAccessLog = null;
         DocumentView docView = null;
         DmAccount account = accountDao.get(accountId);
         DmFolder folder = folderDao.findById(folderId);
@@ -1257,14 +1285,21 @@ public class DmDocumentServiceImpl implements DmDocumentService {
             throw new IllegalArgumentException(MessageCodeConstants.EBDM_ERROR_DOC_GENERAL_NOT_FOUND + " : " + "Document not found.");
         }
 
+        String accessLogId = UUID.randomUUID().toString();
+
         DmDocAccessHistory accessHistory = new DmDocAccessHistory();
-        accessHistory.setId(UUID.randomUUID().toString());
+        accessHistory.setId(accessLogId);
         accessHistory.setAccessedBy(account);
         accessHistory.setAccessedTime(new Date());
         accessHistory.setDocVersion(document.getLastVersion());
         accessHistory.setAccessType(DocumentAccessHistory.DOCUMENT_VIEW.getAccessType());
         docAccessHistoryDao.save(accessHistory);
-        return docView;
+
+        documentViewWithAccessLog = new DocumentViewWithAccessLog();
+        documentViewWithAccessLog.setDocumentView(docView);
+        documentViewWithAccessLog.setAccessLog(accessHistory);
+
+        return documentViewWithAccessLog;
     }
 
     public DocumentCompare compareDocumentVersion(String firstVersionId, String secondVersionId) {
@@ -1604,7 +1639,8 @@ public class DmDocumentServiceImpl implements DmDocumentService {
         return false;
     }
 
-    public DocumentVersionDownload downloadDocumentVersion(String documentId, String versionId, String folderId, String accountId) {
+    public DocumentVersionDownloadWithAccessLog downloadDocumentVersion(String documentId, String versionId, String folderId, String accountId) {
+        DocumentVersionDownloadWithAccessLog documentVersionDownloadWithAccessLog = null;
         DocumentVersionDownload download = null;
         DmAccount account = accountDao.get(accountId);
         DmFolder folder = folderDao.findById(folderId);
@@ -1635,17 +1671,25 @@ public class DmDocumentServiceImpl implements DmDocumentService {
             throw new IllegalArgumentException(MessageCodeConstants.EBDM_ERROR_DOC_GENERAL_NOT_FOUND + " : " + "Document not found.");
         }
 
+        String accessLogId = UUID.randomUUID().toString();
+
         DmDocAccessHistory accessHistory = new DmDocAccessHistory();
-        accessHistory.setId(UUID.randomUUID().toString());
+        accessHistory.setId(accessLogId);
         accessHistory.setAccessedBy(account);
         accessHistory.setAccessedTime(new Date());
         accessHistory.setDocVersion(document.getLastVersion());
         accessHistory.setAccessType(DocumentAccessHistory.DOWNLOAD.getAccessType());
         docAccessHistoryDao.save(accessHistory);
-        return download;
+
+        documentVersionDownloadWithAccessLog = new DocumentVersionDownloadWithAccessLog();
+        documentVersionDownloadWithAccessLog.setDocumentVersionDownload(download);
+        documentVersionDownloadWithAccessLog.setAccessLog(accessHistory);
+
+        return documentVersionDownloadWithAccessLog;
     }
 
-    public DocumentVersionDownload viewDocumentVersion(String documentId, String versionId, String folderId, String accountId) {
+    public DocumentVersionDownloadWithAccessLog viewDocumentVersion(String documentId, String versionId, String folderId, String accountId) {
+        DocumentVersionDownloadWithAccessLog documentVersionDownloadWithAccessLog = null;
         DocumentVersionDownload download = null;
         DmAccount account = accountDao.get(accountId);
         DmFolder folder = folderDao.findById(folderId);
@@ -1698,14 +1742,24 @@ public class DmDocumentServiceImpl implements DmDocumentService {
             throw new IllegalArgumentException(MessageCodeConstants.EBDM_ERROR_DOC_GENERAL_NOT_FOUND + " : " + "Document not found.");
         }
 
+        String accessLogId = UUID.randomUUID().toString();
+
         DmDocAccessHistory accessHistory = new DmDocAccessHistory();
-        accessHistory.setId(UUID.randomUUID().toString());
+        accessHistory.setId(accessLogId);
         accessHistory.setAccessedBy(account);
         accessHistory.setAccessedTime(new Date());
         accessHistory.setDocVersion(document.getLastVersion());
         accessHistory.setAccessType(DocumentAccessHistory.DOCUMENT_VIEW.getAccessType());
         docAccessHistoryDao.save(accessHistory);
-        return download;
+
+        documentVersionDownloadWithAccessLog = new DocumentVersionDownloadWithAccessLog();
+        documentVersionDownloadWithAccessLog.setDocumentVersionDownload(download);
+        documentVersionDownloadWithAccessLog.setAccessLog(accessHistory);
+
+        return documentVersionDownloadWithAccessLog;
     }
 
+    public List<String> getVersionIdList(String documentId) {
+        return documentVersionDao.getIdListByDocId(documentId);
+    }
 }

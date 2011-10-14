@@ -11,9 +11,11 @@ import com.ebdesk.dm.engine.domain.DmDocument;
 import com.ebdesk.dm.engine.domain.DmDocumentComment;
 import com.ebdesk.dm.engine.domain.DmDocumentVersion;
 import com.ebdesk.dm.engine.dto.DocumentCompare;
-import com.ebdesk.dm.engine.dto.DocumentDownload;
+import com.ebdesk.dm.engine.dto.DocumentDownloadWithAccessLog;
 import com.ebdesk.dm.engine.dto.DocumentVersionDownload;
-import com.ebdesk.dm.engine.dto.DocumentView;
+import com.ebdesk.dm.engine.dto.DocumentVersionDownloadWithAccessLog;
+import com.ebdesk.dm.engine.dto.DocumentViewWithAccessLog;
+import com.ebdesk.dm.engine.dto.DocumentWithAccessLog;
 import java.util.List;
 import org.apache.commons.fileupload.FileItem;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,11 +93,11 @@ public class DmDocumentServiceUtil {
      * @exception UserAccountNotFoundException if the user account doesn't exist.
      * @exception DocumentNotFoundException if the document doesn't exist or deleted.
      */
-    public static DmDocument viewDocumentInformation(String documentId, String userId) {
+    public static DocumentWithAccessLog viewDocumentInformation(String documentId, String userId) {
         return getDocumentService().viewDocumentInformation(documentId, userId);
     }
     
-    public static DocumentView viewDocumentPage(String documentId, String folderId, String accountId){
+    public static DocumentViewWithAccessLog viewDocumentPage(String documentId, String folderId, String accountId){
         return getDocumentService().viewDocumentPage(documentId, folderId, accountId);
     }
 
@@ -206,19 +208,19 @@ public class DmDocumentServiceUtil {
         return getDocumentService().findDocRenderImageById(renderImageId);
     }
     
-    public static DocumentDownload downloadDocument(String documentId, String folderId, String accountId){
+    public static DocumentDownloadWithAccessLog downloadDocument(String documentId, String folderId, String accountId){
         return getDocumentService().downloadDocument(documentId, folderId, accountId);
     }
     
-    public static DocumentDownload viewDocument(String documentId, String folderId, String accountId){
+    public static DocumentDownloadWithAccessLog viewDocument(String documentId, String folderId, String accountId){
         return getDocumentService().viewDocument(documentId, folderId, accountId);
     }
 
-    public static DocumentVersionDownload downloadDocumentVersion(String documentId, String versionId, String folderId, String accountId) {
+    public static DocumentVersionDownloadWithAccessLog downloadDocumentVersion(String documentId, String versionId, String folderId, String accountId) {
         return getDocumentService().downloadDocumentVersion(documentId, versionId, folderId, accountId);
     }
 
-    public static DocumentVersionDownload viewDocumentVersion(String documentId, String versionId, String folderId, String accountId) {
+    public static DocumentVersionDownloadWithAccessLog viewDocumentVersion(String documentId, String versionId, String folderId, String accountId) {
         return getDocumentService().viewDocumentVersion(documentId, versionId, folderId, accountId);
     }
 
@@ -280,5 +282,9 @@ public class DmDocumentServiceUtil {
 
     public static boolean moveDocument(String documentId, String folderIdDest, String accountIdOperator) {
         return getDocumentService().moveDocument(documentId, folderIdDest, accountIdOperator);
+    }
+
+    public static List<String> getVersionIdList(String documentId) {
+        return getDocumentService().getVersionIdList(documentId);
     }
 }

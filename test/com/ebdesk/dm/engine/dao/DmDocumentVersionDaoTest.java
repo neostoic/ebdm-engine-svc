@@ -47,7 +47,7 @@ public class DmDocumentVersionDaoTest extends BaseTest {
     /**
      * Test of findDocumentVersionByDocId method, of class DmDocumentVersionDao.
      */
-    @Test
+//    @Test
     public void testFindDocumentVersionByDocId() {
         List<DmDocumentVersion> versions = documentVersionDao.findDocumentVersionByDocId("02dfb409-c386-4541-b844-6a7b3dcd25ce", 0, 10, null, null);
         for (DmDocumentVersion dmDocumentVersion : versions) {
@@ -57,6 +57,18 @@ public class DmDocumentVersionDaoTest extends BaseTest {
                 System.out.println("APPROVAL ID : "+dmDocumentVersion.getApproval().getId() + " , "+dmDocumentVersion.getApproval().getStatus());
             }
         }
+    }
+
+    @Test
+    public void testGetIdListByDocId() {
+        System.out.println("start - testGetIdListByDocId");
+        List<String> versionIdList = documentVersionDao.getIdListByDocId("92ecb47c-ed28-451d-8b6c-29e827932621");
+        if (versionIdList != null) {
+            for (String versionId : versionIdList) {
+                System.out.println("versionId = " + versionId);
+            }
+        }
+        System.out.println("end - testGetIdListByDocId");
     }
 
     //@Test
