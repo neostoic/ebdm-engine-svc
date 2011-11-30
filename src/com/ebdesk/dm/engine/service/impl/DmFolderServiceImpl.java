@@ -14,6 +14,7 @@ import com.ebdesk.dm.engine.dao.DmFolderDao;
 import com.ebdesk.dm.engine.dao.DmFolderDescendantDao;
 import com.ebdesk.dm.engine.dao.DmFolderPermissionDao;
 import com.ebdesk.dm.engine.dao.DmFolderRelatedDao;
+import com.ebdesk.dm.engine.dao.DmFolderTermFrequencyDao;
 import com.ebdesk.dm.engine.domain.DmAccount;
 import com.ebdesk.dm.engine.domain.DmFolder;
 import com.ebdesk.dm.engine.domain.DmFolderDescendant;
@@ -52,6 +53,8 @@ public class DmFolderServiceImpl implements DmFolderService {
     private DmFolderDescendantDao folderDescendantDao;
     @Autowired
     private DmDocumentIndexedDao documentIndexedDao;
+    @Autowired
+    private DmFolderTermFrequencyDao folderTermFrequencyDao;
 
     public boolean save(DmFolder folder) {
         if(folder.getId() == null)
@@ -914,12 +917,12 @@ public class DmFolderServiceImpl implements DmFolderService {
         // TODO later: when indexing of document includes ascendant folders information,
         // reindex even when owner is the same account
         if (isChangeOwner) {
-            System.out.println("set reindex by folder list");
-            if (folderAndDescendantFolderIdToUpdateList != null) {
-                for (String folderAndDescendantFolderIdToUpdate : folderAndDescendantFolderIdToUpdateList) {
-                    System.out.println("folder id: " + folderAndDescendantFolderIdToUpdate);
-                }
-            }
+//            System.out.println("set reindex by folder list");
+//            if (folderAndDescendantFolderIdToUpdateList != null) {
+//                for (String folderAndDescendantFolderIdToUpdate : folderAndDescendantFolderIdToUpdateList) {
+//                    System.out.println("folder id: " + folderAndDescendantFolderIdToUpdate);
+//                }
+//            }
             documentIndexedDao.setReindexByFolderList(folderAndDescendantFolderIdToUpdateList);
         }
         // end - handle reindexing of documents
@@ -929,5 +932,13 @@ public class DmFolderServiceImpl implements DmFolderService {
 
     public List<DmFolder> getAscendantOrderedList(String folderId) {
         return folderDescendantDao.getAscendantOrderedList(folderId);
+    }
+
+    public List<String> getTopTerm(String folderId, int numTerm) {
+        return folderTermFrequencyDao.getTopTerm(folderId, numTerm);
+    }
+
+    public List<String> getTopTermInclSubFolders(String folderId, int numTerm, String accountId) {
+        return folderTermFrequencyDao.getTopTermInclSubFolders(folderId, numTerm, accountId);
     }
 }

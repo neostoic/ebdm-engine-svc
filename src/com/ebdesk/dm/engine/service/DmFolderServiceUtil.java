@@ -177,4 +177,12 @@ public class DmFolderServiceUtil {
     public static List<DmFolder> getAscendantOrderedList(String folderId) {
         return getFolderService().getAscendantOrderedList(folderId);
     }
+
+    public static List<String> getTopTerm(String folderId, int numTerm) {
+        return getFolderService().getTopTerm(folderId, numTerm);
+    }
+
+    public static List<String> getTopTermInclSubFolders(String folderId, int numTerm, String accountId) {
+        return getFolderService().getTopTermInclSubFolders(folderId, numTerm, accountId);
+    }
 }

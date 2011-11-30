@@ -68,6 +68,8 @@ public class DmDocument implements Serializable {
     private List<DmDocumentKeyword> documentKeywordList;
     @OneToMany(mappedBy = "document")
     private List<DmDocumentIndexed> documentIndexedList;
+    @OneToMany(mappedBy = "document")
+    private List<DmDocTermFreqStored> docTermFreqStoredList;
     @OneToOne(mappedBy = "document")
     private DmDocumentApproval approval;
     private DmDocumentVersion requestedVersion;
@@ -222,4 +224,13 @@ public class DmDocument implements Serializable {
     public void setRequestedVersion(DmDocumentVersion requestedVersion) {
         this.requestedVersion = requestedVersion;
     }
+
+    public List<DmDocTermFreqStored> getDocTermFreqStoredList() {
+        return docTermFreqStoredList;
+    }
+
+    public void setDocTermFreqStoredList(List<DmDocTermFreqStored> docTermFreqStoredList) {
+        this.docTermFreqStoredList = docTermFreqStoredList;
+    }
+    
 }

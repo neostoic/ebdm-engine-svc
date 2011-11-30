@@ -6,13 +6,14 @@ package com.ebdesk.dm.engine.service;
 
 import com.ebdesk.dm.engine.domain.DmDocAccessHistory;
 import com.ebdesk.dm.engine.domain.DmDocRenderImage;
+import com.ebdesk.dm.engine.domain.DmDocTermFreqStored;
+import com.ebdesk.dm.engine.domain.DmDocTermFrequency;
 import com.ebdesk.dm.engine.domain.DmDocViewAnnotation;
 import com.ebdesk.dm.engine.domain.DmDocument;
 import com.ebdesk.dm.engine.domain.DmDocumentComment;
 import com.ebdesk.dm.engine.domain.DmDocumentVersion;
 import com.ebdesk.dm.engine.dto.DocumentCompare;
 import com.ebdesk.dm.engine.dto.DocumentDownloadWithAccessLog;
-import com.ebdesk.dm.engine.dto.DocumentVersionDownload;
 import com.ebdesk.dm.engine.dto.DocumentVersionDownloadWithAccessLog;
 import com.ebdesk.dm.engine.dto.DocumentViewWithAccessLog;
 import com.ebdesk.dm.engine.dto.DocumentWithAccessLog;
@@ -286,5 +287,37 @@ public class DmDocumentServiceUtil {
 
     public static List<String> getVersionIdList(String documentId) {
         return getDocumentService().getVersionIdList(documentId);
+    }
+
+    public static List<DmDocument> getTermFreqNotStoredDocList(int numDocs) {
+        return getDocumentService().getTermFreqNotStoredDocList(numDocs);
+    }
+
+    public static void saveTermFreqStored(DmDocTermFreqStored docTermFreqStored) {
+        getDocumentService().saveTermFreqStored(docTermFreqStored);
+    }
+
+    public static void deleteTermFreqStoredByDocId(String documentId) {
+        getDocumentService().deleteTermFreqStoredByDocId(documentId);
+    }
+
+    public static void saveDocTermFrequency(DmDocTermFrequency docTermFrequency) {
+        getDocumentService().saveDocTermFrequency(docTermFrequency);
+    }
+
+    public static void deleteDocTermFrequencyByDocId(String documentId) {
+        getDocumentService().deleteDocTermFrequencyByDocId(documentId);
+    }
+
+    public static void addFolderTermFrequencyByDoc(String documentId, String folderId) {
+        getDocumentService().addFolderTermFrequencyByDoc(documentId, folderId);
+    }
+
+    public static void subtractFolderTermFrequencyByDoc(String documentId, String folderId) {
+        getDocumentService().subtractFolderTermFrequencyByDoc(documentId, folderId);
+    }
+
+    public static List<String> getTopTerm(String documentId, int numTerm) {
+        return getDocumentService().getTopTerm(documentId, numTerm);
     }
 }

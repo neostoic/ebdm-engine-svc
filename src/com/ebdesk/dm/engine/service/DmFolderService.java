@@ -61,4 +61,7 @@ public interface DmFolderService {
     public boolean move(String folderId, String folderDestId, String accountDestId, String accountOperatorId);
 
     public List<DmFolder> getAscendantOrderedList(String folderId);
+
+    public List<String> getTopTerm(String folderId, int numTerm);
+    public List<String> getTopTermInclSubFolders(String folderId, int numTerm, String accountId);
 }

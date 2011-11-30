@@ -111,7 +111,7 @@ public class DmAccountDaoTest {
         System.out.println("end - getList");
     }
 
-//    @Test
+    @Test
     public void testGet() {
 //    public DmAccount get(String id);
         System.out.println("start - get");
@@ -145,7 +145,7 @@ public class DmAccountDaoTest {
         System.out.println("end - delete");
     }
 
-    @Test
+//    @Test
     public void testGetByNameExcludeById() {
 //    public DmAccount getByNameExcludeById(String name, String id) {
         System.out.println("start - getByNameExcludeById");

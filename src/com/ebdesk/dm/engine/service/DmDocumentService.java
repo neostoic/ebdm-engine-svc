@@ -7,13 +7,14 @@ package com.ebdesk.dm.engine.service;
 
 import com.ebdesk.dm.engine.domain.DmDocAccessHistory;
 import com.ebdesk.dm.engine.domain.DmDocRenderImage;
+import com.ebdesk.dm.engine.domain.DmDocTermFreqStored;
+import com.ebdesk.dm.engine.domain.DmDocTermFrequency;
 import com.ebdesk.dm.engine.domain.DmDocViewAnnotation;
 import com.ebdesk.dm.engine.domain.DmDocument;
 import com.ebdesk.dm.engine.domain.DmDocumentComment;
 import com.ebdesk.dm.engine.domain.DmDocumentVersion;
 import com.ebdesk.dm.engine.dto.DocumentCompare;
 import com.ebdesk.dm.engine.dto.DocumentDownloadWithAccessLog;
-import com.ebdesk.dm.engine.dto.DocumentVersionDownload;
 import com.ebdesk.dm.engine.dto.DocumentVersionDownloadWithAccessLog;
 import com.ebdesk.dm.engine.dto.DocumentViewWithAccessLog;
 import com.ebdesk.dm.engine.dto.DocumentWithAccessLog;
@@ -223,4 +224,20 @@ public interface DmDocumentService {
     public boolean moveDocument(String documentId, String folderIdDest, String accountIdOperator);
 
     public List<String> getVersionIdList(String documentId);
+
+    public List<DmDocument> getTermFreqNotStoredDocList(int numDocs);
+
+    public void saveTermFreqStored(DmDocTermFreqStored docTermFreqStored);
+
+    public void deleteTermFreqStoredByDocId(String documentId);
+
+    public void saveDocTermFrequency(DmDocTermFrequency docTermFrequency);
+
+    public void deleteDocTermFrequencyByDocId(String documentId);
+
+    public void addFolderTermFrequencyByDoc(String documentId, String folderId);
+
+    public void subtractFolderTermFrequencyByDoc(String documentId, String folderId);
+
+    public List<String> getTopTerm(String documentId, int numTerm);
 }

@@ -12,6 +12,8 @@ import com.ebdesk.dm.engine.dao.DmAuthorDao;
 import com.ebdesk.dm.engine.dao.DmContentTypeDao;
 import com.ebdesk.dm.engine.dao.DmDocAccessHistoryDao;
 import com.ebdesk.dm.engine.dao.DmDocRenderImageDao;
+import com.ebdesk.dm.engine.dao.DmDocTermFreqStoredDao;
+import com.ebdesk.dm.engine.dao.DmDocTermFrequencyDao;
 import com.ebdesk.dm.engine.dao.DmDocViewAnnotationDao;
 import com.ebdesk.dm.engine.dao.DmDocumentApprovalDao;
 import com.ebdesk.dm.engine.dao.DmDocumentAuthorDao;
@@ -26,11 +28,14 @@ import com.ebdesk.dm.engine.dao.DmDocumentVersionApprovalDao;
 import com.ebdesk.dm.engine.dao.DmDocumentVersionDao;
 import com.ebdesk.dm.engine.dao.DmFolderDao;
 import com.ebdesk.dm.engine.dao.DmFolderPermissionDao;
+import com.ebdesk.dm.engine.dao.DmFolderTermFrequencyDao;
 import com.ebdesk.dm.engine.domain.DmAccount;
 import com.ebdesk.dm.engine.domain.DmAuthor;
 import com.ebdesk.dm.engine.domain.DmContentType;
 import com.ebdesk.dm.engine.domain.DmDocAccessHistory;
 import com.ebdesk.dm.engine.domain.DmDocRenderImage;
+import com.ebdesk.dm.engine.domain.DmDocTermFreqStored;
+import com.ebdesk.dm.engine.domain.DmDocTermFrequency;
 import com.ebdesk.dm.engine.domain.DmDocViewAnnotation;
 import com.ebdesk.dm.engine.domain.DmDocument;
 import com.ebdesk.dm.engine.domain.DmDocumentApproval;
@@ -129,6 +134,13 @@ public class DmDocumentServiceImpl implements DmDocumentService {
     private DmDocumentVersionApprovalDao documentVersionApprovalDao;
     @Autowired
     private DmDocumentApprovalDao documentApprovalDao;
+    @Autowired
+    private DmDocTermFreqStoredDao docTermFreqStoredDao;
+    @Autowired
+    private DmDocTermFrequencyDao docTermFrequencyDao;
+    @Autowired
+    private DmFolderTermFrequencyDao folderTermFrequencyDao;
+
     /****
      * Find DmDocument by folder id.
      * @param folderId folder identifier
@@ -527,7 +539,12 @@ public class DmDocumentServiceImpl implements DmDocumentService {
             if (approved){
                 approval.setStatus(ApprovalStatus.APPROVED.getStatus());
                 document.setApproved(Boolean.TRUE);
+//                document.setLastModifiedTime(new Date());
                 documentDao.update(document);
+
+                // reindex; because approved document should be (solr) indexed,
+                // while not (yet) approved document is also recorded (in dm_document_indexed) as indexed although not (solr) indexed
+                documentIndexedDao.setReindexByDocument(documentId);
             }else{ 
                 approval.setStatus(ApprovalStatus.REJECT.getStatus());
             }
@@ -1761,5 +1778,38 @@ public class DmDocumentServiceImpl implements DmDocumentService {
 
     public List<String> getVersionIdList(String documentId) {
         return documentVersionDao.getIdListByDocId(documentId);
+    }
+
+    public List<DmDocument> getTermFreqNotStoredDocList(int numDocs) {
+        return docTermFreqStoredDao.getNotStoredDocList(numDocs);
+    }
+
+    public void saveTermFreqStored(DmDocTermFreqStored docTermFreqStored) {
+        docTermFreqStoredDao.save(docTermFreqStored);
+    }
+
+    public void deleteTermFreqStoredByDocId(String documentId) {
+        docTermFreqStoredDao.deleteByDocumentId(documentId);
+    }
+
+    public void saveDocTermFrequency(DmDocTermFrequency docTermFrequency) {
+        docTermFrequencyDao.save(docTermFrequency);
+    }
+
+    public void deleteDocTermFrequencyByDocId(String documentId) {
+        docTermFrequencyDao.deleteByDocId(documentId);
+    }
+
+    public void addFolderTermFrequencyByDoc(String documentId, String folderId) {
+        folderTermFrequencyDao.increaseByDoc(documentId, folderId);
+        folderTermFrequencyDao.insertByDoc(documentId, folderId);        
+    }
+
+    public void subtractFolderTermFrequencyByDoc(String documentId, String folderId) {
+        folderTermFrequencyDao.decreaseByDoc(documentId, folderId);
+    }
+
+    public List<String> getTopTerm(String documentId, int numTerm) {
+        return docTermFrequencyDao.getTopTerm(documentId, numTerm);
     }
 }
